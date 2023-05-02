@@ -23,6 +23,8 @@ def get_neighbour_indices(z: float, cat: Any, cm: ac.Cosmology, center_point: An
         A cosmology model object.
     center_point: array_like
         Point whose nearest neighbours are to be found.
+    b: float, optional
+        Seperation distance in Mpc, default value is 10 Mpc.
 
     Returns
     -------
@@ -63,9 +65,9 @@ def get_neighbour_indices(z: float, cat: Any, cm: ac.Cosmology, center_point: An
     bt = BallTree( cat, leaf_size = 2, metric = 'haversine' )
 
     # search for nearest neighbors in `theta` distance from the center point
-    nnids = bt.query_radius( center_point, theta )
+    nnids, dist = bt.query_radius( center_point, theta, return_distance = True )
 
-    return nnids
+    return nnids, dist
 
 
 # test:
@@ -75,14 +77,18 @@ def _test():
     z = 0.005
 
     # using 1000 random points on the sphere as galaxies
-    cat = np.random.uniform( [-np.pi/2., 0.], [np.pi/2., 2*np.pi], size = [100000, 2] ) 
+    cat = np.random.uniform( [-np.pi/2., 0.], [np.pi/2., 2*np.pi], size = [100, 2] ) 
 
     # using a flat lcdm model cosmology
     cm  = ac.FlatLambdaCDM(H0 = 70.0, Om0 = 0.3, Tcmb0 = 2.725, Ob0 = 0.05)
 
     # find the neighbours around random point
     p = np.random.uniform( [-np.pi/2., 0.], [np.pi/2., 2*np.pi], size = [2, 2] )
-    j = get_neighbour_indices( z = z, cat = cat, cm = cm, center_point = p )
+    j, dj = get_neighbour_indices( z = z, cat = cat, cm = cm, center_point = p )
+
+    def haversine_distance(x, y):
+
+        return 2. * np.arcsin( np.sqrt( np.sin(0.5*(x[0] - y[0]))**2 + np.cos(x[0]) * np.cos(y[0]) * np.sin(0.5*(x[1] - y[1]))**2 ) )
 
     
     # visualize to check
@@ -98,7 +104,13 @@ def _test():
         plt.plot( p[i,1],      p[i,0],      'o', ms = 5, color = (val, 0., 0.) ) # test points
         plt.plot( cat[j[i],1], cat[j[i],0], 'o', ms = 5, color = (0., val, 0.) ) # neighbors
 
-    plt.show()
+        d0 = dj[i]
+        d1 = [haversine_distance(q, p[i]) for q in cat[j[i]]]
+        print(d0)
+        print(d1)
+        print( np.allclose( d0, d1 ) )
+
+    # plt.show()
 
     return
 
