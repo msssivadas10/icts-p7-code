@@ -1,0 +1,32 @@
+# YAML file for galaxy and cluster catalogs
+
+
+
+cluster catalog:
+    	name:
+  	description:
+
+galaxy catalog:
+	name:
+	description:
+
+cosmo model:
+	name: FlatLambdaCDM
+	omega_m:
+	H0:
+
+galaxies:
+	r_min:
+	r_max:
+	n_bins:
+	z_min:
+	z_max:
+	brightness:
+
+output file:
+	name:
+	description:
+		
+	
+
+
