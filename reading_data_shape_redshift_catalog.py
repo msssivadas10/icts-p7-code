@@ -3,26 +3,10 @@
 # Date: 02 May 2023
 
 
-import h5py
-import time
 import numpy as np
-import matplotlib.pyplot as plt
 import pandas as pd
 from astropy.io import fits
-from astropy import units as u
-import astropy.coordinates as coord
 
-from matplotlib import rc, rcParams
-rc_params = {'axes.labelsize': 20,
-             'axes.titlesize': 20,
-             'axes.linewidth':2,
-             'font.size': 20,
-             'lines.linewidth' : 2.5,
-             'legend.fontsize': 15,
-             'xtick.labelsize': 20,
-             'ytick.labelsize': 20
-            }
-rcParams.update(rc_params)
 
 def reading_shape_data(file_data, params, shear_flag="unsheared", start=0, end=1000000):
     """
@@ -69,8 +53,8 @@ def reading_lens_params(filename, z_min=0.01, z_max=4, frac=0.01):
         data_dict[key] = data[key][idx]
     return data_dict
 
-
-def reading_data_sources(start, end):
+# NOTE: function now accept the file objects as inputs (not global vars)
+def reading_data_sources(shape_file_data, redshift_file_data, start, end):
     """
     start:
     end: 
@@ -104,10 +88,10 @@ def reading_data_sources(start, end):
         
     return data_selected
 
-file = "/home/idies/workspace/Temporary/surhudm/scratch/DES/DESY3_metacal_v03-004.h5"
-file_z = "/home/idies/workspace/Temporary/surhudm/scratch/DES/DESY3_GOLD_2_2.1_DNF.h5"
-shape_file_data = h5py.File(file, "r")
-redshift_file_data = h5py.File(file_z, "r")
+# file = "/home/idies/workspace/Temporary/surhudm/scratch/DES/DESY3_metacal_v03-004.h5"
+# file_z = "/home/idies/workspace/Temporary/surhudm/scratch/DES/DESY3_GOLD_2_2.1_DNF.h5"
+# shape_file_data = h5py.File(file, "r")
+# redshift_file_data = h5py.File(file_z, "r")
 
 # t0 = time.time()
 # Nsize = shape_file_data["catalog"]["unsheared"]["e_1"].shape[0]
@@ -121,7 +105,7 @@ redshift_file_data = h5py.File(file_z, "r")
 # print("Time taken: %f seconds!"%(tf-t0))
 
 
-fname = "/home/idies/workspace/Temporary/surhudm/scratch/DES/y3a2_gold2.2.1_redmagic_highdens.fits"
-lens_data = reading_lens_params(filename=fname)
+# fname = "/home/idies/workspace/Temporary/surhudm/scratch/DES/y3a2_gold2.2.1_redmagic_highdens.fits"
+# lens_data = reading_lens_params(filename=fname)
 
 
