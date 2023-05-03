@@ -15,9 +15,6 @@ from sklearn.neighbors import BallTree      # for nearest neighbours
 from reading_data_shape_redshift_catalog import reading_lens_params, reading_data_sources # for loading the catalogs
 from calc_tngt_shear import get_lens_constants, calculate_dsigma_increments # for calculating delta-sigma
 
-
-
-
 # define the function to run pipline.
 # input: config filename  
 def run_pipeline(config_fname):
@@ -125,20 +122,6 @@ def run_pipeline(config_fname):
                                            return_distance = True 
                                         )
         sys.stderr.write(f"Completed in {time.time() - __t0:,} sec\n")
-        import json
-
-        class NumpyEncoder(json.JSONEncoder):
-            def default(self, obj):
-                if isinstance(obj, np.ndarray):
-                    return obj.tolist()
-                return json.JSONEncoder.default(self, obj)
-            
-        with open('nnid.json','w') as f:
-            json.dump( list(map(list, nnid)), f, cls = NumpyEncoder )
-        with open('dist.json','w') as f:
-            json.dump( list(map(list, dist)), f, cls = NumpyEncoder )
-        
-        return
         
         # NOTE 1: `nnid` and `dist` are arrays of arrays so that, each sub-array 
         # correspond to neighbours of a specific source. i.e., `i`-th sub-array will 
@@ -148,7 +131,7 @@ def run_pipeline(config_fname):
         # into a 2d array with col-1 => index or id of the lenses and col-2 => distance.
         # if the source has the index `j` in the source dataset, then corresponding 
         # neighbours will be in at index `j` in the list
-        # nn_i = list( map(lambda __o: np.stack([__o], 1), zip( nnid, dist )) ) # join the 2 arrays along col
+        nn_i = list( map(lambda __o: np.stack([__o], 1), zip( nnid, dist )) ) # join the 2 arrays along col
         # nnDB.append([ src_i, nn_i ])
 
         # 
