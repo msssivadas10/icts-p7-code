@@ -3,6 +3,7 @@
 # @author: AnirbanC
 
 import numpy as np
+from tqdm import tqdm
 
 PI = np.pi
 G  = 4.299E-09   # gravitational constant in (km/sec)^2 Mpc/Msun
@@ -39,7 +40,7 @@ def calculate_dsigma_increments (src,lenses,nn,binedges) :
     R22 = src["R22"]  
     R=0.5*(R11+R22)
     w=src["weight"]
-    for i in range (len(ra)) :
+    for i in tqdm(range(len(ra))) :
         lens_id, lens_theta = nn[i].T
         nn_lens = lenses.iloh[lens_id] 
         lens_ra= nn_lens["ra"]

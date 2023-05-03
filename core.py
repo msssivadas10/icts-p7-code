@@ -6,6 +6,7 @@
 #
 
 import numpy as np, pandas as pd
+import sys
 import h5py # to read hdf5 files
 import yaml # to parse yaml config files
 from astropy.cosmology import FlatLambdaCDM # cosmology model
@@ -21,6 +22,7 @@ def run_pipeline(config_fname):
     # 
     # reading the config file
     #
+    sys.stderr.write("Reading the config file...\n")
     with open( config_fname, 'r' ) as file:
         inputs = yaml.safe_load( file )
 
@@ -58,6 +60,7 @@ def run_pipeline(config_fname):
     # 
     # read files: lenses catalog -> ra, dec, redshift
     #
+    sys.stderr.write("Reading the lens catalog...\n")
     lens_fname = inputs[ 'files' ][ 'lens_file' ] # lenses filename
     
     # read the lens data into a pandas.DataFrame object, having features including 
@@ -72,6 +75,7 @@ def run_pipeline(config_fname):
     #
     # create a ball-tree using the lens positions for efficent neighbor search
     #
+    sys.stderr.write("Creating the lens tree...\n")
     lens_bt = BallTree( data      = lenses[['dec', 'ra']].to_numpy(), 
                         leaf_size = 20, 
                         metric    = 'haversine' # metric on a spherical surface
@@ -80,6 +84,7 @@ def run_pipeline(config_fname):
     #
     # read files: source catalog -> ra, dec, redshift etc
     #
+    sys.stderr.write("Creating source file objects...\n")
     srcs_file = h5py.File( inputs[ 'files' ][ 'src_shape_file' ]    ) # source shape data
     srcz_file = h5py.File( inputs[ 'files' ][ 'src_redshift_file' ] ) # source redshifts
 
@@ -98,16 +103,19 @@ def run_pipeline(config_fname):
 
     # nnDB   = [] # a database for the holding the source chunks and the neighbour data
     # dsigma = [] # to store the delta-sigma values (TODO: check this)
+    sys.stderr.write("Starting mainloop...\n")
     for i in range( src_size // chunk_size + 1 ):
 
         # load a subset of sources 
         start = i * chunk_size
         stop  = start + chunk_size
+        sys.stderr.write(f"Loading sources from {start} to {stop}...\n")
         src_i = pd.DataFrame( reading_data_sources( srcs_file, srcz_file, start, stop ) )
         src_i['cdist_mean'] = comoving_distance( src_i['zmean_sof'] ) # using mean redshift
         src_i['cdist_mc']   = comoving_distance( src_i['zmc_sof'] )   # using mc redshift
 
         # find the nearest neighbours using the maximum radius
+        sys.stderr.write("Searching for neighbours...\n")
         nnid, dist = lens_bt.query_radius( src_i[['dec', 'ra']].to_numpy(), 
                                            theta_max, 
                                            return_distance = True 
@@ -128,6 +136,7 @@ def run_pipeline(config_fname):
         # calculating the average delta-sigma value
         #
         # jackknife mean and error TODO
+        sys.stderr.write("Calculating increments...\n")
         delta_num, delta_num_cross, delta_den = calculate_dsigma_increments( src_i, lenses, nn_i, r_edges )
         
         dsigma_num      = dsigma_num + delta_num
@@ -135,13 +144,17 @@ def run_pipeline(config_fname):
         denom           = denom + delta_den
 
         break # for testing, stop after first iteration
-        
+    
+    sys.stderr.write("End of mainloop...\n")
+
     #
     # calculate delta-sigma and gamma-cross and write to file
     #
+    sys.stderr.write("Calculating delta-sigma...\n")
     dsigma      = dsigma_num / denom
     dsigma_cross = dsigma_num_cross / denom
     
+    sys.stderr.write("Writing the output file...\n")
     pd.DataFrame(
                     { 'r_center'   : 0.5*(r_bins[1:] + r_bins[:-1]), # bin centers (linear)
                       'dsigma'     : dsigma,
@@ -149,7 +162,8 @@ def run_pipeline(config_fname):
                 }).to_csv( inputs[ 'files' ][ 'output' ], # output filename
                            index = False,                 # do not write the indices to the file
                         )
-
+    
+    sys.stderr.write("The end...\n")
     return
 
 # 
