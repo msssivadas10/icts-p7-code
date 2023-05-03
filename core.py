@@ -78,8 +78,8 @@ def run_pipeline(config_fname):
     #
     sys.stderr.write("Creating the lens tree...\n")
     lens_bt = BallTree( data      = lenses[['dec', 'ra']].to_numpy(), 
-                        leaf_size = 20, 
-                        metric    = 'haversine' # metric on a spherical surface
+                        # leaf_size = 20, 
+                        # metric    = 'haversine' # metric on a spherical surface
                     )
 
     #
@@ -132,7 +132,7 @@ def run_pipeline(config_fname):
         # into a 2d array with col-1 => index or id of the lenses and col-2 => distance.
         # if the source has the index `j` in the source dataset, then corresponding 
         # neighbours will be in at index `j` in the list
-        nn_i = list( map(lambda __o: np.stack([__o], 1), zip( nnid, dist )) ) # join the 2 arrays along col
+        # nn_i = list( map(lambda __o: np.stack([__o], 1), zip( nnid, dist )) ) # join the 2 arrays along col
         # nnDB.append([ src_i, nn_i ])
 
         # 
