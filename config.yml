@@ -1,0 +1,24 @@
+# configuration file for the weak lensing calculations
+
+# specifies various filenames
+files:
+  lens_file: lens_file                 # lens objects
+  src_shape_file: src_shape_file       # source shape catalog
+  src_redshift_file: src_redshift      # source redshift catalog
+  output: output_file # output file
+
+# specify the cosmology model parameters (flat Lambda-cdm model)
+cosmology:
+ name:        FlatLambdaCDM
+ OmegaMatter: 0.3
+ H0:          70.
+
+# other parameters
+r_min:      0.1 
+r_max:      10.
+r_bins:     11   # number of bins
+z_min:      0.1  # redshift minimum
+z_max:      1.2  # redshift maximum
+z_bins:     1001 # number of redshift bins 
+brightness: 25.
+chunk_size: 1000_000 # size of the source data chunks
