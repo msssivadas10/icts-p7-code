@@ -131,7 +131,7 @@ def run_pipeline(config_fname):
         # into a 2d array with col-1 => index or id of the lenses and col-2 => distance.
         # if the source has the index `j` in the source dataset, then corresponding 
         # neighbours will be in at index `j` in the list
-        nn_i = list( map(lambda __o: np.stack([__o], 1), zip( nnid, dist )) ) # join the 2 arrays along col
+        # nn_i = list( map(lambda __o: np.stack([__o], 1), zip( nnid, dist )) ) # join the 2 arrays along col
         # nnDB.append([ src_i, nn_i ])
 
         # 
@@ -140,7 +140,7 @@ def run_pipeline(config_fname):
         # jackknife mean and error TODO
         sys.stderr.write("Calculating increments...\n")
         __t0 = time.time()
-        delta_num, delta_num_cross, delta_den = calculate_dsigma_increments( src_i, lenses, nn_i, r_edges )
+        delta_num, delta_num_cross, delta_den = calculate_dsigma_increments( src_i, lenses, nnid, dist, r_edges )
         sys.stderr.write(f"Completed in {time.time() - __t0:,} sec\n")
         
         dsigma_num      = dsigma_num + delta_num

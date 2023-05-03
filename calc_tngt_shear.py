@@ -16,7 +16,7 @@ def get_lens_constants(lenses,c_dist) :
     return 4*PI*G/(C**2)*(1+halo_z)*halo_x,halo_x
 
 
-def calculate_dsigma_increments (src,lenses,nn,binedges) :
+def calculate_dsigma_increments (src,lenses,nnid, dist,binedges) :
     
     kernel = np.array([0.5, 0.5])                                                           # Define a kernel for averaging consecutive bins
     bin_cen = np.convolve(binedges, kernel, mode='valid')                                   # Apply convolution with the kernel to find bin_cen_
@@ -41,8 +41,7 @@ def calculate_dsigma_increments (src,lenses,nn,binedges) :
     R=0.5*(R11+R22)
     w=src["weight"]
     for i in tqdm(range(len(ra))) :
-        print(np.shape(nn[i]))
-        lens_id, lens_theta = nn[i].T
+        lens_id, lens_theta = nnid[i], dist[i]
         nn_lens = lenses.iloh[lens_id] 
         lens_ra= nn_lens["ra"]
         lens_dec= nn_lens["dec"]
