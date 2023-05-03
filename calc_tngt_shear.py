@@ -4,6 +4,15 @@
 
 import numpy as np
 from tqdm import tqdm
+from kdtreecode import get_xxyyzz_simple
+
+def get_distance(lra, ldec, sra, sdec):
+    xxl, yyl, zzl = get_xxyyzz_simple(lra,ldec)
+    xxs, yys, zzs = get_xxyyzz_simple(sra,sdec)
+    dist = xxl*xxs+yyl*yys+zzl*zzs
+    dist[dist>1] = 1.0
+    return np.arccos(dist)
+    
 
 PI = np.pi
 G  = 4.299E-09   # gravitational constant in (km/sec)^2 Mpc/Msun
@@ -16,7 +25,7 @@ def get_lens_constants(lenses,c_dist) :
     return 4*PI*G/(C**2)*(1+halo_z)*halo_x,halo_x
 
 
-def calculate_dsigma_increments (src,lenses,nnid, dist,binedges) :
+def calculate_dsigma_increments (src,lenses,nnid,binedges) :
     
     bin_min=binedges[0]
     bin_max=binedges[-1]
@@ -38,16 +47,19 @@ def calculate_dsigma_increments (src,lenses,nnid, dist,binedges) :
     R=0.5*(R11+R22)
     w=src["weight"]
     for i in tqdm(range(len(ra))) :
-        lens_id, lens_theta = nnid[i], dist[i]
+        lens_id = np.array(nnid[i])
         nn_lens = lenses.iloc[lens_id] 
-        lens_ra= nn_lens["ra"]
-        lens_dec= nn_lens["dec"]
-        lens_z= nn_lens["zredmagic"]
-        lens_constant = nn_lens["const"]
-        lens_cdist= nn_lens["cdist"]
+        lens_ra= np.array(nn_lens["ra"])
+        lens_dec= np.array(nn_lens["dec"])
+        lens_z= np.array(nn_lens["zredmagic"])
+        lens_constant = np.array(nn_lens["const"])
+        lens_cdist= np.array(nn_lens["cdist"])
+        lens_theta = get_distance(lens_ra, lens_dec, ra[i], dec[i])
          
 #    Choose lenses only beind the source
-        where=np.where(lens_z > z_mean[i])[0]
+        where=np.array(np.where(lens_z > z_mean[i])[0])
+        where = lens_z>z_mean[i]
+        #where=(lens_z > z_mean[i]).to_numpy()
         lens_id = lens_id[where]
         lens_theta = lens_theta[where]
         lens_ra= lens_ra[where]
@@ -73,7 +85,7 @@ def calculate_dsigma_increments (src,lenses,nnid, dist,binedges) :
         lens_cdist= lens_cdist[where]
         lens_radDist = lens_radDist[where]
         theta_abs = np.abs(np.sin(lens_theta))
-        index = np.digitize(np.log10(lens_radDist,binedges))
+        index = np.digitize(np.log10(lens_radDist),binedges)
 
         
         for j in range ( len(lens_id)) :
