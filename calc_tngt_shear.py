@@ -27,9 +27,9 @@ def calculate_dsigma_increments (src,lenses,nn,bin_edges) :
     ra= src["ra"]
     dec= src["dec"]
     z_mean= src["zmean_sof"]
-    cdist_mean=nngal["cdist_mean"]
+    cdist_mean=src["cdist_mean"]
     z_mc=src["zmc_sof"]
-    cdist_mc=nngal["cdist_mc"]
+    cdist_mc=src["cdist_mc"]
     e1= src["e_1"]
     e2=src["e_2"]
     R11 = src["R11"]
@@ -62,7 +62,7 @@ def calculate_dsigma_increments (src,lenses,nn,bin_edges) :
         
 # Choose only lenses less than bin_max
         
-        where = np.where(lens_radDist < bin_max)
+        where = np.where(lens_radDist < bin_max)[0]
         lens_id = lens_id[where]
         lens_theta = lens_theta[where]
         lens_ra= lens_ra[where]
@@ -72,18 +72,18 @@ def calculate_dsigma_increments (src,lenses,nn,bin_edges) :
         lens_cdist= lens_cdist[where]
         lens_radDist = lens_radDist[where]
         theta_abs = np.abs(np.sin(lens_theta))
+        index = np.digitize(np.log10(lens_radDist,bins))
 
         
         for j in range ( len(lens_id)) :
-            index = np.floor((lens_radDist[j]-bin_min)/bin_width)        # check if binning is correct (theta or R)
             
             sin_phi2 = (-1*np.sin(lens_dec[j])*np.cos(dec[i]) + np.sin(dec[i])*np.cos(lens_dec[j])*np.cos(lens_ra[j]-ra[i]))/theta_abs[j]
             cos_phi2 = np.sin(ra[i]-lens_ra[j])*np.cos(lens_dec[j])/theta_abs[j]
 
             cos_2phi2 = 2*cos_phi2*cos_phi2 - 1
-            sin_2phi2 = 2*sin_pi2*cos_phi2
+            sin_2phi2 = 2*sin_phi2*cos_phi2
             e_tan = -1*e1[i]*cos_2phi2 - e2[i]*sin_2phi2
-            e_cross = e1[i]*np.sin_2phi2 - e2[i]*cos_2phi2
+            e_cross = e1[i]*sin_2phi2 - e2[i]*cos_2phi2
             num_tan[index]+=lens_constant[j]*w[i]*(1-lens_cdist[j]/cdist_mean[i])*e_tan
             num_cross[index]+=lens_constant[j]*w[i]*(1-lens_cdist[j]/cdist_mean[i])*e_cross
             den[index]+=(lens_constant[j]**2)*w[j]*(1-lens_cdist[j]/cdist_mean[i])*(1-lens_cdist[j]/cdist_mc[i])*R[i]
