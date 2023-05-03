@@ -5,8 +5,9 @@
 # code skelton: work in progress
 #
 
-import numpy as np, pandas as pd, h5py
-import yaml  # to parse yaml config files
+import numpy as np, pandas as pd
+import h5py # to read hdf5 files
+import yaml # to parse yaml config files
 from astropy.cosmology import FlatLambdaCDM # cosmology model
 from scipy.interpolate import CubicSpline   # for interpolations
 from sklearn.neighbors import BallTree      # for nearest neighbours
@@ -93,6 +94,7 @@ def run_pipeline(config_fname):
     gamma_num_cross = np.zeros( r_bins )
 
     # calculate the bin edges TODO
+    r_edges = np.logspace( np.log10( r_min ), np.log10( r_max ), r_bins ) # log space bin edges
 
     # nnDB   = [] # a database for the holding the source chunks and the neighbour data
     # dsigma = [] # to store the delta-sigma values (TODO: check this)
@@ -119,7 +121,7 @@ def run_pipeline(config_fname):
         # into a 2d array with col-1 => index or id of the lenses and col-2 => distance.
         # if the source has the index `j` in the source dataset, then corresponding 
         # neighbours will be in at index `j` in the list
-        nn_i = list( map(lambda __o: np.stack(__o, 1), zip( nnid, dist )) ) # join the 2 arrays along col
+        nn_i = list( map(lambda __o: np.stack([__o], 1), zip( nnid, dist )) ) # join the 2 arrays along col
         # nnDB.append([ src_i, nn_i ])
 
         # 
@@ -133,14 +135,11 @@ def run_pipeline(config_fname):
         denom           = denom + delta_den
         
     #
-    # delta-sigma and gamma-cross
+    # calculate delta-sigma and gamma-cross and write to file
     #
     dsigma      = dsigma_num / denom
     gamma_cross = gamma_num_cross / denom
     
-    #
-    # writing the output file: bin edges, delta-sigma and gamma-cross 
-    #        
     pd.DataFrame(
                     { 'r_center'   : 0.5*(r_bins[1:] + r_bins[:-1]), # bin centers (linear)
                       'dsigma'     : dsigma,
