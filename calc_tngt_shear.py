@@ -41,6 +41,7 @@ def calculate_dsigma_increments (src,lenses,nn,binedges) :
     R=0.5*(R11+R22)
     w=src["weight"]
     for i in tqdm(range(len(ra))) :
+        print(np.shape(nn[i]))
         lens_id, lens_theta = nn[i].T
         nn_lens = lenses.iloh[lens_id] 
         lens_ra= nn_lens["ra"]

@@ -85,8 +85,8 @@ def run_pipeline(config_fname):
     # read files: source catalog -> ra, dec, redshift etc
     #
     sys.stderr.write("Creating source file objects...\n")
-    srcs_file = h5py.File( inputs[ 'files' ][ 'src_shape_file' ]    ) # source shape data
-    srcz_file = h5py.File( inputs[ 'files' ][ 'src_redshift_file' ] ) # source redshifts
+    srcs_file = h5py.File( inputs[ 'files' ][ 'src_shape_file' ] , 'r' ) # source shape data
+    srcz_file = h5py.File( inputs[ 'files' ][ 'src_redshift_file' ], 'r' ) # source redshifts
 
     src_size   = srcs_file["catalog"]["unsheared"]["e_1"].shape[0] # size of the sources
     chunk_size = inputs[ 'chunk_size' ]   # size of each sub catalog
