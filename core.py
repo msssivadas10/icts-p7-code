@@ -167,7 +167,7 @@ def run_pipeline(config_fname):
     
     sys.stderr.write("Writing the output file...\n")
     pd.DataFrame(
-                    { 'r_center'   : 0.5*(r_bins[1:] + r_bins[:-1]), # bin centers (linear)
+                    { 'r_center'   : 0.5*(r_edges[1:] + r_edges[:-1]), # bin centers (linear)
                       'dsigma'     : dsigma,
                       'dsigma_cross': dsigma_cross, 
                 }).to_csv( inputs[ 'files' ][ 'output' ], # output filename
