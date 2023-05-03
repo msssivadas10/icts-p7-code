@@ -27,7 +27,10 @@ class BallTree:
         if return_distance:
             for ii in range(idx.shape[0]):
                 # Get_distances
-                dist[ii] = np.arccos(max(0, min(xx[ii]*xx[idx[ii]] + yy[ii]*yy[idx[ii]] + zz[ii]*zz[idx[ii]], 1)))
+                dist[ii] = xx[ii]*xx[idx[ii]] + yy[ii]*yy[idx[ii]] + zz[ii]*zz[idx[ii]]
+                idx = dist[ii]>1
+                dist[ii][idx] = 1
+                dist[ii] = np.arccos(dist[ii])
 
             return idx, dist
 
