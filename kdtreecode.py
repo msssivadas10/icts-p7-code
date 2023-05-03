@@ -19,19 +19,8 @@ class BallTree:
         self.tree = KDTree(np.array([self.xx, self.yy, self.zz]).T)
 
 
-    def query_radius(self, data_src, theta_max, return_distance):
+    def query_radius(self, data_src, theta_max):
     
         xx, yy, zz = get_xxyyzz(data_src)
         idx = self.tree.query_ball_point(np.array([xx, yy, zz]).T, r=theta_max)
-        dist = idx * 1
-        if return_distance:
-            for ii in range(idx.shape[0]):
-                # Get_distances
-                dist[ii] = xx[ii]*xx[idx[ii]] + yy[ii]*yy[idx[ii]] + zz[ii]*zz[idx[ii]]
-                idx = dist[ii]>1
-                dist[ii][idx] = 1
-                dist[ii] = np.arccos(dist[ii])
-
-            return idx, dist
-
         return idx
