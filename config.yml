@@ -21,4 +21,4 @@ z_min:      0.2  # redshift minimum
 z_max:      0.7  # redshift maximum
 z_bins:     1001 # number of redshift bins 
 frac_bright: 0.01
-chunk_size: 1000000 # size of the source data chunks
+chunk_size: 10_000 # size of the source data chunks
