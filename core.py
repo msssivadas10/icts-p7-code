@@ -38,7 +38,7 @@ def run_pipeline(config_fname):
     #
     # calculate and interpolate the comoving distances for future use
     #
-    z  = np.linspace( z_min, z_max, inputs[ 'z_bins' ] ) 
+    z  = np.linspace( max( z_min - 0.1, 0. ), min( z_max + 0.1, 10. ), inputs[ 'z_bins' ] ) 
     xz = cm.comoving_distance( z ) 
     
     # spline object for comoving distance calculation
@@ -134,7 +134,7 @@ def run_pipeline(config_fname):
         dsigma_num_cross = dsigma_num_cross + delta_num_cross
         denom           = denom + delta_den
 
-        # break # for testing, stop after first iteration
+        break # for testing, stop after first iteration
         
     #
     # calculate delta-sigma and gamma-cross and write to file
