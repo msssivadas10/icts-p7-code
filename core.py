@@ -12,7 +12,7 @@ import yaml # to parse yaml config files
 from astropy.cosmology import FlatLambdaCDM # cosmology model
 from scipy.interpolate import CubicSpline   # for interpolations
 #from sklearn.neighbors import BallTree      # for nearest neighbours
-from kdtreecode import BallTree
+from kdtreecode import BallTree             # for nearest neighbours
 from reading_data_shape_redshift_catalog import reading_lens_params, reading_data_sources # for loading the catalogs
 from calc_tngt_shear import get_lens_constants, calculate_dsigma_increments # for calculating delta-sigma
 
@@ -158,21 +158,25 @@ def run_pipeline(config_fname):
     
     sys.stderr.write("End of mainloop...\n")
 
+    print(dsigma_num)
+    print(dsigma_num_cross)
+    print(denom)
+
     #
     # calculate delta-sigma and gamma-cross and write to file
     #
     sys.stderr.write("Calculating delta-sigma...\n")
-    dsigma      = dsigma_num / denom
-    dsigma_cross = dsigma_num_cross / denom
+    # dsigma      = dsigma_num / denom
+    # dsigma_cross = dsigma_num_cross / denom
     
-    sys.stderr.write("Writing the output file...\n")
-    pd.DataFrame(
-                    { 'r_center'   : 0.5*(r_edges[1:] + r_edges[:-1]), # bin centers (linear)
-                      'dsigma'     : dsigma,
-                      'dsigma_cross': dsigma_cross, 
-                }).to_csv( inputs[ 'files' ][ 'output' ], # output filename
-                           index = False,                 # do not write the indices to the file
-                        )
+    # sys.stderr.write("Writing the output file...\n")
+    # pd.DataFrame(
+    #                 { 'r_center'   : 0.5*(r_edges[1:] + r_edges[:-1]), # bin centers (linear)
+    #                   'dsigma'     : dsigma,
+    #                   'dsigma_cross': dsigma_cross, 
+    #             }).to_csv( inputs[ 'files' ][ 'output' ], # output filename
+    #                        index = False,                 # do not write the indices to the file
+    #                     )
     
     sys.stderr.write("The end...\n")
     return
