@@ -12,7 +12,7 @@ from astropy.cosmology import FlatLambdaCDM # cosmology model
 from scipy.interpolate import CubicSpline   # for interpolations
 from sklearn.neighbors import BallTree      # for nearest neighbours
 from reading_data_shape_redshift_catalog import reading_lens_params, reading_data_sources # for loading the catalogs
-# TODO: for calculating delta-sigma
+from calc_tngt_shear import get_lens_constants, calculate_dsigma_increments # for calculating delta-sigma
 
 # define the function to run pipline.
 # input: config filename  
