@@ -133,6 +133,8 @@ def run_pipeline(config_fname):
         dsigma_num      = dsigma_num + delta_num
         gamma_num_cross = gamma_num_cross + delta_num_cross
         denom           = denom + delta_den
+
+        # break # for testing, stop after first iteration
         
     #
     # calculate delta-sigma and gamma-cross and write to file
