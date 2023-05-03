@@ -97,9 +97,9 @@ def run_pipeline(config_fname):
     #
     # read the catalogs and calculate the delta-sigma values 
     #
-    dsigma_num      = np.zeros( r_bins )
-    denom           = np.zeros( r_bins )
-    dsigma_num_cross = np.zeros( r_bins )
+    dsigma_num       = np.zeros( r_bins - 1 )
+    denom            = np.zeros( r_bins - 1 )
+    dsigma_num_cross = np.zeros( r_bins - 1 )
 
     # calculate the bin edges TODO
     r_edges = np.logspace( np.log10( r_min ), np.log10( r_max ), r_bins ) # log space bin edges
