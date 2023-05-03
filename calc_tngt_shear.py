@@ -18,15 +18,12 @@ def get_lens_constants(lenses,c_dist) :
 
 def calculate_dsigma_increments (src,lenses,nnid, dist,binedges) :
     
-    kernel = np.array([0.5, 0.5])                                                           # Define a kernel for averaging consecutive bins
-    bin_cen = np.convolve(binedges, kernel, mode='valid')                                   # Apply convolution with the kernel to find bin_cen_
     bin_min=binedges[0]
     bin_max=binedges[-1]
-    bin_width = binedges[1]- binedges[0]
     
-    num_tan = np.zeros(len(bin_cen))
-    num_cross = np.zeros(len(bin_cen))
-    den = np.zeros(len(bin_cen))
+    num_tan = np.zeros(len(binedges)-1)
+    num_cross = np.zeros(len(binedges)-1)
+    den = np.zeros(len(binedges)-1)
     
     ra= src["ra"]
     dec= src["dec"]
@@ -95,4 +92,3 @@ def calculate_dsigma_increments (src,lenses,nnid, dist,binedges) :
     return num_tan, num_cross, den
             
  
-
