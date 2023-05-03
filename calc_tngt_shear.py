@@ -42,7 +42,7 @@ def calculate_dsigma_increments (src,lenses,nnid, dist,binedges) :
     w=src["weight"]
     for i in tqdm(range(len(ra))) :
         lens_id, lens_theta = nnid[i], dist[i]
-        nn_lens = lenses.iloh[lens_id] 
+        nn_lens = lenses.iloc[lens_id] 
         lens_ra= nn_lens["ra"]
         lens_dec= nn_lens["dec"]
         lens_z= nn_lens["zredmagic"]
