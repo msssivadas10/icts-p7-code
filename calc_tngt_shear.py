@@ -1,24 +1,27 @@
 #!/usr/bin/env python
 # coding: utf-8
+# @author: AnirbanC
 
-# In[ ]:
+import numpy as np
 
+PI = np.pi
+G  = 4.299E-09   # gravitational constant in (km/sec)^2 Mpc/Msun
+C  = 299792.4580 # speed of light in km/sec 
 
 def get_lens_constants(lenses,c_dist) :
+    
     halo_z=lenses["zredmagic"]
     halo_x=c_dist(halo_z)
-    return 4*pi*G/(c**2)*(1+halo_z)*halo_x,halo_x
+    return 4*PI*G/(C**2)*(1+halo_z)*halo_x,halo_x
 
 
-def calculate_dsigma_increments (src,lenses,nn,bin_edges) :
-    
-    
+def calculate_dsigma_increments (src,lenses,nn,binedges) :
     
     kernel = np.array([0.5, 0.5])                                                           # Define a kernel for averaging consecutive bins
     bin_cen = np.convolve(binedges, kernel, mode='valid')                                   # Apply convolution with the kernel to find bin_cen_
     bin_min=binedges[0]
     bin_max=binedges[-1]
-    bin_width = binedges[1]- binedes[0]
+    bin_width = binedges[1]- binedges[0]
     
     num_tan = np.zeros(len(bin_cen))
     num_cross = np.zeros(len(bin_cen))
@@ -72,7 +75,7 @@ def calculate_dsigma_increments (src,lenses,nn,bin_edges) :
         lens_cdist= lens_cdist[where]
         lens_radDist = lens_radDist[where]
         theta_abs = np.abs(np.sin(lens_theta))
-        index = np.digitize(np.log10(lens_radDist,bins))
+        index = np.digitize(np.log10(lens_radDist,binedges))
 
         
         for j in range ( len(lens_id)) :
