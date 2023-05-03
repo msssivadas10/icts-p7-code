@@ -6,7 +6,7 @@
 #
 
 import numpy as np, pandas as pd
-import sys
+import sys, time
 import h5py # to read hdf5 files
 import yaml # to parse yaml config files
 from astropy.cosmology import FlatLambdaCDM # cosmology model
@@ -116,10 +116,12 @@ def run_pipeline(config_fname):
 
         # find the nearest neighbours using the maximum radius
         sys.stderr.write("Searching for neighbours...\n")
+        __t0 = time.time()
         nnid, dist = lens_bt.query_radius( src_i[['dec', 'ra']].to_numpy(), 
                                            theta_max, 
                                            return_distance = True 
                                         )
+        sys.stderr.write(f"Completed in {time.time() - __t0:,} sec\n")
         
         # NOTE 1: `nnid` and `dist` are arrays of arrays so that, each sub-array 
         # correspond to neighbours of a specific source. i.e., `i`-th sub-array will 
@@ -137,7 +139,9 @@ def run_pipeline(config_fname):
         #
         # jackknife mean and error TODO
         sys.stderr.write("Calculating increments...\n")
+        __t0 = time.time()
         delta_num, delta_num_cross, delta_den = calculate_dsigma_increments( src_i, lenses, nn_i, r_edges )
+        sys.stderr.write(f"Completed in {time.time() - __t0:,} sec\n")
         
         dsigma_num      = dsigma_num + delta_num
         dsigma_num_cross = dsigma_num_cross + delta_num_cross
