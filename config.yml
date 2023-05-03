@@ -2,10 +2,10 @@
 
 # specifies various filenames
 files:
-  lens_file: lens_file                 # lens objects
-  src_shape_file: src_shape_file       # source shape catalog
-  src_redshift_file: src_redshift      # source redshift catalog
-  output: output_file # output file
+  lens_file: /home/idies/workspace/Temporary/surhudm/scratch/DES/y3a2_gold2.2.1_redmagic_highdens.fits                 # lens objects
+  src_shape_file: /home/idies/workspace/Temporary/surhudm/scratch/DES/DESY3_metacal_v03-004.h5       # source shape catalog
+  src_redshift_file: /home/idies/workspace/Temporary/surhudm/scratch/DES/DESY3_GOLD_2_2.1_DNF.h5      # source redshift catalog
+  output: dsigma.dat # output file
 
 # specify the cosmology model parameters (flat Lambda-cdm model)
 cosmology:
