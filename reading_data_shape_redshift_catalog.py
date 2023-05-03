@@ -50,7 +50,7 @@ def reading_lens_params(filename, z_min=0.01, z_max=4, frac=0.01):
     
     data_dict = {}
     for key in lens_params:
-        data_dict[key] = data[key][idx]
+        data_dict[key] = data[key][idx].byteswap().newbyteorder()
     return data_dict
 
 # NOTE: function now accept the file objects as inputs (not global vars)
