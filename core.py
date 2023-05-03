@@ -122,6 +122,13 @@ def run_pipeline(config_fname):
                                            return_distance = True 
                                         )
         sys.stderr.write(f"Completed in {time.time() - __t0:,} sec\n")
+        import json
+        with open('nnid.json','w') as f:
+            json.dump( list(map(list, nnid)), f )
+        with open('dist.json','w') as f:
+            json.dump( list(map(list, dist)), f )
+        
+        return
         
         # NOTE 1: `nnid` and `dist` are arrays of arrays so that, each sub-array 
         # correspond to neighbours of a specific source. i.e., `i`-th sub-array will 
