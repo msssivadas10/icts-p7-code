@@ -77,12 +77,12 @@ def run_pipeline(config_fname):
     # create a ball-tree using the lens positions for efficent neighbor search
     #
     sys.stderr.write("Creating the lens tree...\n")
-    #lens_bt = BallTree( data      = lenses[['dec', 'ra']].to_numpy(), 
-    #                    # leaf_size = 20, 
-    #                    # metric    = 'haversine' # metric on a spherical surface
-    #                )
-    lens_bt = BallTree( lenses[['dec', 'ra']].to_numpy(), 
+    lens_bt = BallTree( data      = lenses[['dec', 'ra']].to_numpy(), 
+                        # leaf_size = 20, 
+                        # metric    = 'haversine' # metric on a spherical surface
                     )
+    #lens_bt = BallTree( lenses[['dec', 'ra']].to_numpy(), 
+    #                )
 
     #
     # read files: source catalog -> ra, dec, redshift etc
