@@ -91,7 +91,7 @@ def run_pipeline(config_fname):
     #
     dsigma_num      = np.zeros( r_bins )
     denom           = np.zeros( r_bins )
-    gamma_num_cross = np.zeros( r_bins )
+    dsigma_num_cross = np.zeros( r_bins )
 
     # calculate the bin edges TODO
     r_edges = np.logspace( np.log10( r_min ), np.log10( r_max ), r_bins ) # log space bin edges
@@ -131,7 +131,7 @@ def run_pipeline(config_fname):
         delta_num, delta_num_cross, delta_den = calculate_dsigma_increments( src_i, lenses, nn_i, r_edges )
         
         dsigma_num      = dsigma_num + delta_num
-        gamma_num_cross = gamma_num_cross + delta_num_cross
+        dsigma_num_cross = dsigma_num_cross + delta_num_cross
         denom           = denom + delta_den
 
         # break # for testing, stop after first iteration
@@ -140,12 +140,12 @@ def run_pipeline(config_fname):
     # calculate delta-sigma and gamma-cross and write to file
     #
     dsigma      = dsigma_num / denom
-    gamma_cross = gamma_num_cross / denom
+    dsigma_cross = dsigma_num_cross / denom
     
     pd.DataFrame(
                     { 'r_center'   : 0.5*(r_bins[1:] + r_bins[:-1]), # bin centers (linear)
                       'dsigma'     : dsigma,
-                      'gamma_cross': gamma_cross, 
+                      'dsigma_cross': dsigma_cross, 
                 }).to_csv( inputs[ 'files' ][ 'output' ], # output filename
                            index = False,                 # do not write the indices to the file
                         )
