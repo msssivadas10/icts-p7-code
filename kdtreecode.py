@@ -13,7 +13,7 @@ def get_xxyyzz(data):
 
 class BallTree:
 
-    def init(self, data):
+    def init(self, data=None):
         self.xx, self.yy, self.zz = get_xxyyzz(data)
 
         self.tree = KDTree(np.array([self.xx, self.yy, self.zz]).T)
