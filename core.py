@@ -15,6 +15,9 @@ from sklearn.neighbors import BallTree      # for nearest neighbours
 from reading_data_shape_redshift_catalog import reading_lens_params, reading_data_sources # for loading the catalogs
 from calc_tngt_shear import get_lens_constants, calculate_dsigma_increments # for calculating delta-sigma
 
+
+
+
 # define the function to run pipline.
 # input: config filename  
 def run_pipeline(config_fname):
@@ -123,10 +126,17 @@ def run_pipeline(config_fname):
                                         )
         sys.stderr.write(f"Completed in {time.time() - __t0:,} sec\n")
         import json
+
+        class NumpyEncoder(json.JSONEncoder):
+            def default(self, obj):
+                if isinstance(obj, np.ndarray):
+                    return obj.tolist()
+                return json.JSONEncoder.default(self, obj)
+            
         with open('nnid.json','w') as f:
-            json.dump( list(map(list, nnid)), f )
+            json.dump( list(map(list, nnid)), f, cls = NumpyEncoder )
         with open('dist.json','w') as f:
-            json.dump( list(map(list, dist)), f )
+            json.dump( list(map(list, dist)), f, cls = NumpyEncoder )
         
         return
         
