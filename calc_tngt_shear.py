@@ -4,6 +4,15 @@
 
 import numpy as np
 from tqdm import tqdm
+from kdtreecode import get_xxyyzz
+
+def get_distance(lra, ldec, sra, sdec):
+    xxl, yyl, zzl = get_xxyyzz(lra,ldec)
+    xxs, yys, zzs = get_xxyyzz(sra,sdec)
+    dist = xxl*xxs+yyl*yys+zzl*zzs
+    dist[dist>1] = 1.0
+    return np.arccos(dist)
+    
 
 PI = np.pi
 G  = 4.299E-09   # gravitational constant in (km/sec)^2 Mpc/Msun
@@ -16,7 +25,7 @@ def get_lens_constants(lenses,c_dist) :
     return 4*PI*G/(C**2)*(1+halo_z)*halo_x,halo_x
 
 
-def calculate_dsigma_increments (src,lenses,nnid, dist,binedges) :
+def calculate_dsigma_increments (src,lenses,nnid,binedges) :
     
     bin_min=binedges[0]
     bin_max=binedges[-1]
@@ -38,13 +47,14 @@ def calculate_dsigma_increments (src,lenses,nnid, dist,binedges) :
     R=0.5*(R11+R22)
     w=src["weight"]
     for i in tqdm(range(len(ra))) :
-        lens_id, lens_theta = nnid[i], dist[i]
+        lens_id = nnid[i]
         nn_lens = lenses.iloc[lens_id] 
         lens_ra= nn_lens["ra"]
         lens_dec= nn_lens["dec"]
         lens_z= nn_lens["zredmagic"]
         lens_constant = nn_lens["const"]
         lens_cdist= nn_lens["cdist"]
+        lens_theta = get_distance(lens_ra, lens_dec, ra[ii], dec[ii])
          
 #    Choose lenses only beind the source
         where=np.where(lens_z > z_mean[i])[0]
