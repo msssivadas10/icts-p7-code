@@ -183,6 +183,10 @@ def run_pipeline(config_fname):
                       'dsigma_cross': dsigma_cross, 
                       'dsigma_num' : dsigma_num,
                       'dsigma_num_cross': dsigma_num_cross,
+                      'dsigmaalt'     : dsigmaalt,
+                      'dsigmaalt_cross': dsigmaalt_cross, 
+                      'dsigmaalt_num' : dsigmaalt_num,
+                      'dsigmaalt_num_cross': dsigmaalt_num_cross,
                       'denom': denom, 
                 }).to_csv( inputs[ 'files' ][ 'output' ], # output filename
                            index = False,                 # do not write the indices to the file
