@@ -76,7 +76,7 @@ def calculate_dsigma_increments (src,lenses,nnid,binedges) :
         
 # Choose only lenses less than bin_max
         
-        where = np.where(lens_radDist < bin_max)[0]
+        where = (lens_radDist < bin_max) & (lens_radDist > bin_min)
         lens_id = lens_id[where]
         lens_theta = lens_theta[where]
         lens_ra= lens_ra[where]
