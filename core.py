@@ -123,7 +123,7 @@ def run_pipeline(config_fname):
     dsigmaalt_num       = np.zeros( r_bins - 1 )
     dsigmaalt_num_cross = np.zeros( r_bins - 1 )
 
-    num_pairs = np.zeros( r_bins - 1, dtype=int)
+    num_pairs = np.zeros( r_bins - 1)
 
     # calculate the bin edges TODO
     r_edges = np.logspace( np.log10( r_min ), np.log10( r_max ), r_bins ) # log space bin edges
