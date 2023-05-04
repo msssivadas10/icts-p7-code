@@ -93,10 +93,10 @@ def calculate_dsigma_increments (src,lenses,nnid,binedges) :
         
         for j in range ( len(lens_id)) :
             
-            # sin_phi2 = (-np.sin(lens_dec[j])*np.cos(dec[i]) + np.sin(dec[i])*np.cos(lens_dec[j])*np.cos(lens_ra[j]-ra[i]))/theta_abs[j]
+            sin_phi2 = (-np.sin(lens_dec[j])*np.cos(dec[i]) + np.sin(dec[i])*np.cos(lens_dec[j])*np.cos(lens_ra[j]-ra[i]))/theta_abs[j]
             cos_phi2 = np.sin(ra[i]-lens_ra[j])*np.cos(lens_dec[j])/theta_abs[j]
-            cos_phi2_sq = cos_phi2**2
-            sin_phi2 = np.sqrt( 1 - cos_phi2_sq )
+            cos_phi2_sq = cos_phi2**2.
+            # sin_phi2 = np.sin(np.acos(cos_phi2))
 
             cos_2phi2 = 2*cos_phi2_sq - 1
             sin_2phi2 = 2*sin_phi2*cos_phi2
