@@ -88,7 +88,7 @@ def calculate_dsigma_increments (src,lenses,nnid,binedges) :
         lens_cdist= lens_cdist[where]
         lens_radDist = lens_radDist[where]
         theta_abs = np.abs(np.sin(lens_theta))
-        index = np.digitize(np.log10(lens_radDist),binedges)
+        index = np.digitize(lens_radDist,binedges) # removed log10(rad_dist)
 
         
         for j in range ( len(lens_id)) :
