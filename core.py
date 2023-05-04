@@ -15,10 +15,15 @@ from scipy.interpolate import CubicSpline   # for interpolations
 from kdtreecode import BallTree             # for nearest neighbours
 from reading_data_shape_redshift_catalog import reading_lens_params, reading_data_sources # for loading the catalogs
 from calc_tngt_shear import get_lens_constants, calculate_dsigma_increments # for calculating delta-sigma
+from mpi4py import MPI
 
 # define the function to run pipline.
 # input: config filename  
 def run_pipeline(config_fname):
+
+    comm = MPI.COMM_WORLD
+    rank = comm.rank
+    size = comm.size
 
     # 
     # reading the config file
@@ -113,6 +118,9 @@ def run_pipeline(config_fname):
     sys.stderr.write("Starting mainloop...\n")
     for i in range( src_size // chunk_size + 1 ):
 
+        if i% size != rank:
+            continue
+
         # load a subset of sources 
         start = i * chunk_size
         stop  = start + chunk_size
@@ -187,7 +195,7 @@ def run_pipeline(config_fname):
                         'dsigmaalt_num' : dsigmaalt_num,
                         'dsigmaalt_num_cross': dsigmaalt_num_cross,
                         'denom': denom, 
-                    }).to_csv( inputs[ 'files' ][ 'output' ], # output filename
+                    }).to_csv( f"{inputs[ 'files' ][ 'output' ]}.{rank:03d}", # output filename
                             index = False,                 # do not write the indices to the file
                             )
     
