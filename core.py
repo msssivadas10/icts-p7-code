@@ -31,7 +31,7 @@ def run_pipeline(config_fname):
         size = comm.size
     except:
         rank = 0
-        size = 0
+        size = 1
 
     # 
     # reading the config file
