@@ -159,8 +159,8 @@ def run_pipeline(config_fname):
         dsigma_num_cross = dsigma_num_cross + delta_num_cross
         denom           = denom + delta_den
 
-        dsigmaalt_num      = dsigma_num + delta_num
-        dsigmaalt_num_cross = dsigma_num_cross + delta_num_cross
+        dsigmaalt_num      = dsigmaalt_num + deltaalt_num
+        dsigmaalt_num_cross = dsigmaalt_num_cross + deltaalt_num_cross
 
         break # for testing, stop after first iteration
     
