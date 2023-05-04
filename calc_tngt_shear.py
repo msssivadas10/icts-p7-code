@@ -100,14 +100,15 @@ def calculate_dsigma_increments (src,lenses,nnid,binedges) :
             sin_2phi2 = 2*sin_phi2*cos_phi2
             e_tan = -1*e1[i]*cos_2phi2 - e2[i]*sin_2phi2
             e_cross = e1[i]*sin_2phi2 - e2[i]*cos_2phi2
-            num_tan[index]+=lens_constant[j]*w[i]*(1-lens_cdist[j]/cdist_mean[i])*e_tan
-            num_cross[index]+=lens_constant[j]*w[i]*(1-lens_cdist[j]/cdist_mean[i])*e_cross
-            den[index]+=(lens_constant[j]**2)*w[i]*(1-lens_cdist[j]/cdist_mean[i])*(1-lens_cdist[j]/cdist_mc[i])*R[i]
+            num_tan[index[j]]+=lens_constant[j]*w[i]*(1-lens_cdist[j]/cdist_mean[i])*e_tan
+            num_cross[index[j]]+=lens_constant[j]*w[i]*(1-lens_cdist[j]/cdist_mean[i])*e_cross
+            den[index[j]]+=(lens_constant[j]**2)*w[i]*(1-lens_cdist[j]/cdist_mean[i])*(1-lens_cdist[j]/cdist_mc[i])*R[i]
 
             ealt_tan = -1*e1[i]*cos_2phi2 + e2[i]*sin_2phi2
             ealt_cross = e1[i]*sin_2phi2 + e2[i]*cos_2phi2
-            numalt_tan[index]+=lens_constant[j]*w[i]*(1-lens_cdist[j]/cdist_mean[i])*ealt_tan
-            numalt_cross[index]+=lens_constant[j]*w[i]*(1-lens_cdist[j]/cdist_mean[i])*ealt_cross
+            numalt_tan[index[j]]+=lens_constant[j]*w[i]*(1-lens_cdist[j]/cdist_mean[i])*ealt_tan
+            numalt_cross[index[j]]+=lens_constant[j]*w[i]*(1-lens_cdist[j]/cdist_mean[i])*ealt_cross
+            numpairs[index[j]] += 1
 
     return num_tan, num_cross, den, numalt_tan, numalt_cross
             
