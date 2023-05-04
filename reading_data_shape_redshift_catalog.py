@@ -36,7 +36,7 @@ def reading_DNF_redshift(file_data, params, shear_flag="unsheared", start=0, end
         
     return pd.DataFrame(data)
 
-def reading_lens_params(filename, z_min=0.01, z_max=4, frac=0.01):
+def reading_lens_params(filename, jacknife_idx, z_min=0.01, z_max=4, frac=0.01):
     
     lens_params = ['coadd_object_id', 'ra', 'dec', 'zredmagic', 'lum_z']
     
@@ -51,6 +51,7 @@ def reading_lens_params(filename, z_min=0.01, z_max=4, frac=0.01):
     data_dict = {}
     for key in lens_params:
         data_dict[key] = data[key][idx].byteswap().newbyteorder()
+    data_dict["jacknife_idx"] = jacknife_idx[idx]
     return data_dict
 
 # NOTE: function now accept the file objects as inputs (not global vars)

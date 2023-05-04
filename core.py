@@ -65,6 +65,7 @@ def run_pipeline(config_fname):
     r_max  = inputs[ 'r_max' ]  # upper distance bound
     r_bins = inputs[ 'r_bins' ] # number of bins
 
+
     #
     # find the angular seperation for nn search
     #
@@ -76,11 +77,14 @@ def run_pipeline(config_fname):
     #
     sys.stderr.write(f"Rank({rank}): Reading the lens catalog...\n")
     lens_fname = inputs[ 'files' ][ 'lens_file' ] # lenses filename
+
+    # read jackknife indices of the lenses
+    jacknife_idx = np.loadtxt( inputs[ 'files' ][ 'jackknife' ], dtype = int, delimiter = ',', skiprows = 1 )
     
     # read the lens data into a pandas.DataFrame object, having features including 
     # coadd_object_id, ra, dec, zredmagic and lum_z 
     # NOTE: ra and dec must be in radians 
-    lenses = pd.DataFrame( reading_lens_params( lens_fname, z_min, z_max, inputs[ 'frac_bright' ] ) )
+    lenses = pd.DataFrame( reading_lens_params( lens_fname, jacknife_idx[:,1], z_min, z_max, inputs[ 'frac_bright' ] ) )
     # lenses = lenses.T.dropna().T # dropping the nan
     
     lconst, lcmdist = get_lens_constants( lenses, comoving_distance ) # precalculate the lens constants and comoving dist

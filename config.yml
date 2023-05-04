@@ -6,6 +6,7 @@ files:
   src_shape_file: /home/idies/workspace/Temporary/surhudm/scratch/DES/DESY3_metacal_v03-004.h5       # source shape catalog
   src_redshift_file: /home/idies/workspace/Temporary/surhudm/scratch/DES/DESY3_GOLD_2_2.1_DNF.h5      # source redshift catalog
   output: dsigma.dat # output file
+  jackknife: jacknife.txt
 
 # specify the cosmology model parameters (flat Lambda-cdm model)
 cosmology:
