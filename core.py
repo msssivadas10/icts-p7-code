@@ -15,15 +15,23 @@ from scipy.interpolate import CubicSpline   # for interpolations
 from kdtreecode import BallTree             # for nearest neighbours
 from reading_data_shape_redshift_catalog import reading_lens_params, reading_data_sources # for loading the catalogs
 from calc_tngt_shear import get_lens_constants, calculate_dsigma_increments # for calculating delta-sigma
-from mpi4py import MPI
+
+try:
+    from mpi4py import MPI
+except:
+    print("MPI not found")
 
 # define the function to run pipline.
 # input: config filename  
 def run_pipeline(config_fname):
 
-    comm = MPI.COMM_WORLD
-    rank = comm.rank
-    size = comm.size
+    try:
+        comm = MPI.COMM_WORLD
+        rank = comm.rank
+        size = comm.size
+    except:
+        rank = 0
+        size = 0
 
     # 
     # reading the config file
