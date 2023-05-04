@@ -74,7 +74,8 @@ def run_pipeline(config_fname):
     # coadd_object_id, ra, dec, zredmagic and lum_z 
     # NOTE: ra and dec must be in radians 
     lenses = pd.DataFrame( reading_lens_params( lens_fname, z_min, z_max, inputs[ 'frac_bright' ] ) )
-    
+    lenses = lenses.dropna() # dropping the nan
+
     lconst, lcmdist = get_lens_constants( lenses, comoving_distance ) # precalculate the lens constants and comoving dist
     lenses['const'] = lconst  # lens constants
     lenses['cdist'] = lcmdist # comoving distances to the lenses
@@ -133,6 +134,7 @@ def run_pipeline(config_fname):
         stop  = start + chunk_size
         sys.stderr.write(f"Loading sources from {start} to {stop}...\n")
         src_i = pd.DataFrame( reading_data_sources( srcs_file, srcz_file, start, stop ) )
+        src_i = src_i.dropna() # dropping the nan
         src_i['cdist_mean'] = comoving_distance( src_i['zmean_sof'] ) # using mean redshift
         src_i['cdist_mc']   = comoving_distance( src_i['zmc_sof'] )   # using mc redshift
 
