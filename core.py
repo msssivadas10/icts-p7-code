@@ -123,6 +123,8 @@ def run_pipeline(config_fname):
     dsigmaalt_num       = np.zeros( r_bins - 1 )
     dsigmaalt_num_cross = np.zeros( r_bins - 1 )
 
+    num_pairs = np.zeros( r_bins - 1, dtype=int)
+
     # calculate the bin edges TODO
     r_edges = np.logspace( np.log10( r_min ), np.log10( r_max ), r_bins ) # log space bin edges
 
@@ -173,7 +175,7 @@ def run_pipeline(config_fname):
         sys.stderr.write(f"Rank({rank}): Calculating increments...\n")
         __t0 = time.time()
         #delta_num, delta_num_cross, delta_den = calculate_dsigma_increments( src_i, lenses, nnid, dist, r_edges )
-        delta_num, delta_num_cross, delta_den, deltaalt_num, deltaalt_num_cross = calculate_dsigma_increments( src_i, lenses, nnid, r_edges )
+        delta_num, delta_num_cross, delta_den, deltaalt_num, deltaalt_num_cross, delta_npairs = calculate_dsigma_increments( src_i, lenses, nnid, r_edges )
         sys.stderr.write(f"Completed in {time.time() - __t0:,} sec\n")
         
         dsigma_num      = dsigma_num + delta_num
@@ -183,6 +185,7 @@ def run_pipeline(config_fname):
         dsigmaalt_num      = dsigmaalt_num + deltaalt_num
         dsigmaalt_num_cross = dsigmaalt_num_cross + deltaalt_num_cross
 
+        num_pairs += delta_npairs
     
         sys.stderr.write(f"Rank({rank}): End of mainloop...\n")
 
@@ -200,10 +203,11 @@ def run_pipeline(config_fname):
         pd.DataFrame(
                         { 'r_center'   : 0.5*(r_edges[1:] + r_edges[:-1]), # bin centers (linear)
                         'dsigma'     : dsigma,
+                        'dsigmaalt'     : dsigmaalt,
+                        'num_pairs'    : num_pairs,
                         'dsigma_cross': dsigma_cross, 
                         'dsigma_num' : dsigma_num,
                         'dsigma_num_cross': dsigma_num_cross,
-                        'dsigmaalt'     : dsigmaalt,
                         'dsigmaalt_cross': dsigmaalt_cross, 
                         'dsigmaalt_num' : dsigmaalt_num,
                         'dsigmaalt_num_cross': dsigmaalt_num_cross,

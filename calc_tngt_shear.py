@@ -36,6 +36,8 @@ def calculate_dsigma_increments (src,lenses,nnid,binedges) :
 
     numalt_tan = np.zeros(len(binedges)-1)
     numalt_cross = np.zeros(len(binedges)-1)
+
+    numpairs = np.zeros(len(binedges)-1)
     
     ra= src["ra"]
     dec= src["dec"]
@@ -100,7 +102,7 @@ def calculate_dsigma_increments (src,lenses,nnid,binedges) :
             e_cross = e1[i]*sin_2phi2 - e2[i]*cos_2phi2
             num_tan[index]+=lens_constant[j]*w[i]*(1-lens_cdist[j]/cdist_mean[i])*e_tan
             num_cross[index]+=lens_constant[j]*w[i]*(1-lens_cdist[j]/cdist_mean[i])*e_cross
-            den[index]+=(lens_constant[j]**2)*w[j]*(1-lens_cdist[j]/cdist_mean[i])*(1-lens_cdist[j]/cdist_mc[i])*R[i]
+            den[index]+=(lens_constant[j]**2)*w[i]*(1-lens_cdist[j]/cdist_mean[i])*(1-lens_cdist[j]/cdist_mc[i])*R[i]
 
             ealt_tan = -1*e1[i]*cos_2phi2 + e2[i]*sin_2phi2
             ealt_cross = e1[i]*sin_2phi2 + e2[i]*cos_2phi2
