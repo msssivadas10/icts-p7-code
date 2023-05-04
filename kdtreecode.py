@@ -2,8 +2,6 @@ from scipy.spatial import KDTree
 import numpy as np
 
 def get_xxyyzz_simple(ra, dec):
-    ra = ra*np.pi/180.
-    dec = dec*np.pi/180.
     xx = np.cos(dec) * np.cos(ra)
     yy = np.cos(dec) * np.sin(ra)
     zz = np.sin(dec)
@@ -12,8 +10,6 @@ def get_xxyyzz_simple(ra, dec):
 
 def get_xxyyzz(data):
     dec, ra = data.T
-    ra = ra*np.pi/180.
-    dec = dec*np.pi/180.
     xx = np.cos(dec) * np.cos(ra)
     yy = np.cos(dec) * np.sin(ra)
     zz = np.sin(dec)

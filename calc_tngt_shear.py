@@ -37,8 +37,8 @@ def calculate_dsigma_increments (src,lenses,nnid,binedges) :
     numalt_tan = np.zeros(len(binedges)-1)
     numalt_cross = np.zeros(len(binedges)-1)
     
-    ra= src["ra"]*np.pi/180
-    dec= src["dec"]*np.pi/180.
+    ra= src["ra"]
+    dec= src["dec"]
     z_mean= src["zmean_sof"]
     cdist_mean=src["cdist_mean"]
     z_mc=src["zmc_sof"]
@@ -52,12 +52,12 @@ def calculate_dsigma_increments (src,lenses,nnid,binedges) :
     for i in tqdm(range(len(ra))) :
         lens_id = np.array(nnid[i])
         nn_lens = lenses.iloc[lens_id] 
-        lens_ra= np.array(nn_lens["ra"])*np.pi/180.
-        lens_dec= np.array(nn_lens["dec"])*np.pi/180.
+        lens_ra= np.array(nn_lens["ra"])
+        lens_dec= np.array(nn_lens["dec"])
         lens_z= np.array(nn_lens["zredmagic"])
         lens_constant = np.array(nn_lens["const"])
         lens_cdist= np.array(nn_lens["cdist"])
-        lens_theta = get_distance(lens_ra*180./np.pi, lens_dec*180./np.pi, ra[i]*180./np.pi, dec[i]*180./np.pi)
+        lens_theta = get_distance(lens_ra, lens_dec, ra[i], dec[i])
          
 #    Choose lenses only beind the source
         where = lens_z<z_mean[i]

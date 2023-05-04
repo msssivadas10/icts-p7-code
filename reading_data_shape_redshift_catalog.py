@@ -52,6 +52,10 @@ def reading_lens_params(filename, jacknife_idx, z_min=0.01, z_max=4, frac=0.01):
     for key in lens_params:
         data_dict[key] = data[key][idx].byteswap().newbyteorder()
     data_dict["jacknife_idx"] = jacknife_idx[idx]
+
+    data_dict["ra"] = data_dict["ra"]*np.pi/180.
+    data_dict["dec"] = data_dict["dec"]*np.pi/180.
+
     return data_dict
 
 # NOTE: function now accept the file objects as inputs (not global vars)
@@ -86,6 +90,9 @@ def reading_data_sources(shape_file_data, redshift_file_data, start, end):
     data_selected = dict()
     for key in list(data.keys()):
         data_selected[key] = data[key].values[idx]
+
+    data_selected["ra"] = data_selected["ra"]*np.pi/180.
+    data_selected["dec"] = data_selected["dec"]*np.pi/180.
         
     return data_selected
 
