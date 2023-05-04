@@ -77,7 +77,7 @@ def calculate_dsigma_increments (src,lenses,nnid,binedges) :
     for i in tqdm(range(len(ra))) :
         lens_id = np.array(nnid[i])
         nn_lens = lenses.iloc[lens_id]
-        lens_jkIDX = np.array(nn_lens["jack_idx"]
+        lens_jkIDX = np.array(nn_lens["jack_idx"])
         lens_ra= np.array(nn_lens["ra"])
         lens_dec= np.array(nn_lens["dec"])
         lens_z= np.array(nn_lens["zredmagic"])
