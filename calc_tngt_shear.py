@@ -60,9 +60,7 @@ def calculate_dsigma_increments (src,lenses,nnid,binedges) :
         lens_theta = get_distance(lens_ra, lens_dec, ra[i], dec[i])
          
 #    Choose lenses only beind the source
-        where=np.array(np.where(lens_z > z_mean[i])[0])
-        where = lens_z>z_mean[i]
-        #where=(lens_z > z_mean[i]).to_numpy()
+        where = lens_z<z_mean[i]
         lens_id = lens_id[where]
         lens_theta = lens_theta[where]
         lens_ra= lens_ra[where]
