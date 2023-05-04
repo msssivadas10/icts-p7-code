@@ -162,35 +162,37 @@ def run_pipeline(config_fname):
         dsigmaalt_num      = dsigmaalt_num + deltaalt_num
         dsigmaalt_num_cross = dsigmaalt_num_cross + deltaalt_num_cross
 
-        break # for testing, stop after first iteration
     
-    sys.stderr.write("End of mainloop...\n")
+        sys.stderr.write("End of mainloop...\n")
 
-    #
-    # calculate delta-sigma and gamma-cross and write to file
-    #
-    sys.stderr.write("Calculating delta-sigma...\n")
-    dsigma      = dsigma_num / denom
-    dsigma_cross = dsigma_num_cross / denom
+        #
+        # calculate delta-sigma and gamma-cross and write to file
+        #
+        sys.stderr.write("Calculating delta-sigma...\n")
+        dsigma      = dsigma_num / denom
+        dsigma_cross = dsigma_num_cross / denom
+        
+        dsigmaalt      = dsigmaalt_num / denom
+        dsigmaalt_cross = dsigmaalt_num_cross / denom
+        
+        sys.stderr.write("Writing the output file...\n")
+        pd.DataFrame(
+                        { 'r_center'   : 0.5*(r_edges[1:] + r_edges[:-1]), # bin centers (linear)
+                        'dsigma'     : dsigma,
+                        'dsigma_cross': dsigma_cross, 
+                        'dsigma_num' : dsigma_num,
+                        'dsigma_num_cross': dsigma_num_cross,
+                        'dsigmaalt'     : dsigmaalt,
+                        'dsigmaalt_cross': dsigmaalt_cross, 
+                        'dsigmaalt_num' : dsigmaalt_num,
+                        'dsigmaalt_num_cross': dsigmaalt_num_cross,
+                        'denom': denom, 
+                    }).to_csv( inputs[ 'files' ][ 'output' ], # output filename
+                            index = False,                 # do not write the indices to the file
+                            )
     
-    dsigmaalt      = dsigmaalt_num / denom
-    dsigmaalt_cross = dsigmaalt_num_cross / denom
-    
-    sys.stderr.write("Writing the output file...\n")
-    pd.DataFrame(
-                    { 'r_center'   : 0.5*(r_edges[1:] + r_edges[:-1]), # bin centers (linear)
-                      'dsigma'     : dsigma,
-                      'dsigma_cross': dsigma_cross, 
-                      'dsigma_num' : dsigma_num,
-                      'dsigma_num_cross': dsigma_num_cross,
-                      'dsigmaalt'     : dsigmaalt,
-                      'dsigmaalt_cross': dsigmaalt_cross, 
-                      'dsigmaalt_num' : dsigmaalt_num,
-                      'dsigmaalt_num_cross': dsigmaalt_num_cross,
-                      'denom': denom, 
-                }).to_csv( inputs[ 'files' ][ 'output' ], # output filename
-                           index = False,                 # do not write the indices to the file
-                        )
+        break # for testing, stop after first iteration
+
     
     sys.stderr.write("The end...\n")
     return
