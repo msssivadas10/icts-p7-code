@@ -2,11 +2,20 @@
 # coding: utf-8
 # @author: AnirbanC
 
+
+###########################################################################################################################
+
+# This file calcuates the DeltaSigma (Surface Mass Density in units of M_sun/Mpc^2) for different radial bins(log scale).
+####  It returns numerators and denominators which can be used to calculate Delta Sigma
+
+###########################################################################################################################
+
+
 import numpy as np
 from tqdm import tqdm
 from kdtreecode import get_xxyyzz_simple
 
-def get_distance(lra, ldec, sra, sdec):
+def get_distance(lra, ldec, sra, sdec):                      #Function finds anguar distances of objects(lenses)[lra,ldec] and a source at [sra,sdec]
     xxl, yyl, zzl = get_xxyyzz_simple(lra,ldec)
     xxs, yys, zzs = get_xxyyzz_simple(sra,sdec)
     dist = xxl*xxs+yyl*yys+zzl*zzs
@@ -18,27 +27,41 @@ PI = np.pi
 G  = 4.299E-09   # gravitational constant in (km/sec)^2 Mpc/Msun
 C  = 299792.4580 # speed of light in km/sec 
 
-def get_lens_constants(lenses,c_dist) :
+# Function finds lens constants used in the calculation of deltaSigma. lens constants are values that only depend on lenses in the Surface Mass Density estimator. Check Shin et al, sec 3 for more details
+
+
+def get_lens_constants(lenses,c_dist) :                       
     
     halo_z=lenses["zredmagic"]
     halo_x=c_dist(halo_z)
     return 4*PI*G/(C**2)*(1+halo_z)*halo_x,halo_x
 
 
+# Function calculates the DeltaSigma
+
+###   src is the source data frame passed on to by core.py
+###   lenses is the source data frame passed on to by core.py
+###   nnid is a list(on sources) containing arrays which contain ids of all lenses linked to each source
+
 def calculate_dsigma_increments (src,lenses,nnid,binedges) :
+    
+    jk_patches=max(lenses["jack_idx"])
     
     bin_min=binedges[0]
     bin_max=binedges[-1]
     
-    num_tan = np.zeros(len(binedges)-1)
-    num_cross = np.zeros(len(binedges)-1)
-    den = np.zeros(len(binedges)-1)
-
-    numalt_tan = np.zeros(len(binedges)-1)
-    numalt_cross = np.zeros(len(binedges)-1)
-
-    numpairs = np.zeros(len(binedges)-1)
+# initializing matrices    
     
+    num_tan = np.zeros((len(binedges)-1),jk_patches)
+    num_cross = np.zeros((len(binedges)-1),jk_patches)
+    den = np.zeros((len(binedges)-1),jk_patches)
+
+    numalt_tan = np.zeros((len(binedges)-1),jk_patches)
+    numalt_cross = np.zeros((len(binedges)-1),jk_patches)
+
+    numpairs = np.zeros((len(binedges)-1),jk_patches)
+    
+
     ra= src["ra"]
     dec= src["dec"]
     z_mean= src["zmean_sof"]
@@ -53,7 +76,8 @@ def calculate_dsigma_increments (src,lenses,nnid,binedges) :
     w=src["weight"]
     for i in tqdm(range(len(ra))) :
         lens_id = np.array(nnid[i])
-        nn_lens = lenses.iloc[lens_id] 
+        nn_lens = lenses.iloc[lens_id]
+        lens_jkIDX = np.array(nn_lens["jack_idx"]
         lens_ra= np.array(nn_lens["ra"])
         lens_dec= np.array(nn_lens["dec"])
         lens_z= np.array(nn_lens["zredmagic"])
@@ -64,12 +88,14 @@ def calculate_dsigma_increments (src,lenses,nnid,binedges) :
 #    Choose lenses only beind the source
         where = lens_z<z_mean[i]
         lens_id = lens_id[where]
+        lens_jkIDX=lens_jkIDX[where]
         lens_theta = lens_theta[where]
         lens_ra= lens_ra[where]
         lens_dec= lens_dec[where]
         lens_z= lens_z[where]
         lens_constant = lens_constant[where]
         lens_cdist= lens_cdist[where]
+                              
 
 # calculate radial distances from theta
         
@@ -80,6 +106,7 @@ def calculate_dsigma_increments (src,lenses,nnid,binedges) :
         
         where = (lens_radDist < bin_max) & (lens_radDist > bin_min)
         lens_id = lens_id[where]
+        lens_jkIDX=lens_jkIDX[where]
         lens_theta = lens_theta[where]
         lens_ra= lens_ra[where]
         lens_dec= lens_dec[where]
@@ -110,6 +137,18 @@ def calculate_dsigma_increments (src,lenses,nnid,binedges) :
             numalt_cross[index[j]]+=lens_constant[j]*w[i]*(1-lens_cdist[j]/cdist_mean[i])*ealt_cross
             numpairs[index[j]] += 1
 
-    return num_tan, num_cross, den, numalt_tan, numalt_cross, numpairs
+            
+
+            num_tan[index[j]][lens_[jkIDX]-=lens_constant[j]*w[i]*(1-lens_cdist[j]/cdist_mean[i])*e_tan
+            num_cross[index[j]][lens_[jkIDX]-=lens_constant[j]*w[i]*(1-lens_cdist[j]/cdist_mean[i])*e_cross
+            den[index[j]][lens_[jkIDX]-=(lens_constant[j]**2)*w[i]*(1-lens_cdist[j]/cdist_mean[i])*(1-lens_cdist[j]/cdist_mc[i])*R[i]
+
+            ealt_tan = -1*e1[i]*cos_2phi2 + e2[i]*sin_2phi2
+            ealt_cross = e1[i]*sin_2phi2 + e2[i]*cos_2phi2
+            numalt_tan[index[j]][lens_[jkIDX]-=lens_constant[j]*w[i]*(1-lens_cdist[j]/cdist_mean[i])*ealt_tan
+            numalt_cross[index[j]][lens_[jkIDX]-=lens_constant[j]*w[i]*(1-lens_cdist[j]/cdist_mean[i])*ealt_cross
+            numpairs[index[j]] += 1
+
+    return num_tan, num_cross, den, numalt_tan, numalt_cross
             
  
