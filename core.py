@@ -36,7 +36,7 @@ def run_pipeline(config_fname):
     # 
     # reading the config file
     #
-    sys.stderr.write("Reading the config file...\n")
+    sys.stderr.write(f"Rank({rank}): Reading the config file...\n")
     with open( config_fname, 'r' ) as file:
         inputs = yaml.safe_load( file )
 
@@ -74,7 +74,7 @@ def run_pipeline(config_fname):
     # 
     # read files: lenses catalog -> ra, dec, redshift
     #
-    sys.stderr.write("Reading the lens catalog...\n")
+    sys.stderr.write(f"Rank({rank}): Reading the lens catalog...\n")
     lens_fname = inputs[ 'files' ][ 'lens_file' ] # lenses filename
     
     # read the lens data into a pandas.DataFrame object, having features including 
@@ -90,7 +90,7 @@ def run_pipeline(config_fname):
     #
     # create a ball-tree using the lens positions for efficent neighbor search
     #
-    sys.stderr.write("Creating the lens tree...\n")
+    sys.stderr.write(f"Rank({rank}): Creating the lens tree...\n")
     lens_bt = BallTree( data      = lenses[['dec', 'ra']].to_numpy(), 
                         # leaf_size = 20, 
                         # metric    = 'haversine' # metric on a spherical surface
@@ -101,7 +101,7 @@ def run_pipeline(config_fname):
     #
     # read files: source catalog -> ra, dec, redshift etc
     #
-    sys.stderr.write("Creating source file objects...\n")
+    sys.stderr.write(f"Rank({rank}): Creating source file objects...\n")
     srcs_file = h5py.File( inputs[ 'files' ][ 'src_shape_file' ] , 'r' ) # source shape data
     srcz_file = h5py.File( inputs[ 'files' ][ 'src_redshift_file' ], 'r' ) # source redshifts
 
@@ -123,7 +123,7 @@ def run_pipeline(config_fname):
 
     # nnDB   = [] # a database for the holding the source chunks and the neighbour data
     # dsigma = [] # to store the delta-sigma values (TODO: check this)
-    sys.stderr.write("Starting mainloop...\n")
+    sys.stderr.write(f"Rank({rank}): Starting mainloop...\n")
     for i in range( src_size // chunk_size + 1 ):
 
         if i% size != rank:
@@ -139,7 +139,7 @@ def run_pipeline(config_fname):
         src_i['cdist_mc']   = comoving_distance( src_i['zmc_sof'] )   # using mc redshift
 
         # find the nearest neighbours using the maximum radius
-        sys.stderr.write("Searching for neighbours...\n")
+        sys.stderr.write(f"Rank({rank}): Searching for neighbours...\n")
         __t0 = time.time()
         #nnid, dist = lens_bt.query_radius( src_i[['dec', 'ra']].to_numpy(), 
         #                                   theta_max, 
@@ -148,7 +148,7 @@ def run_pipeline(config_fname):
 
         nnid = lens_bt.query_radius(src_i[['dec', 'ra']].to_numpy(), 
                                     theta_max)
-        sys.stderr.write(f"Completed in {time.time() - __t0:,} sec\n")
+        sys.stderr.write(f"Rank({rank}): Completed in {time.time() - __t0:,} sec\n")
         
         # NOTE 1: `nnid` and `dist` are arrays of arrays so that, each sub-array 
         # correspond to neighbours of a specific source. i.e., `i`-th sub-array will 
@@ -165,7 +165,7 @@ def run_pipeline(config_fname):
         # calculating the average delta-sigma value
         #
         # jackknife mean and error TODO
-        sys.stderr.write("Calculating increments...\n")
+        sys.stderr.write(f"Rank({rank}): Calculating increments...\n")
         __t0 = time.time()
         #delta_num, delta_num_cross, delta_den = calculate_dsigma_increments( src_i, lenses, nnid, dist, r_edges )
         delta_num, delta_num_cross, delta_den, deltaalt_num, deltaalt_num_cross = calculate_dsigma_increments( src_i, lenses, nnid, r_edges )
@@ -179,19 +179,19 @@ def run_pipeline(config_fname):
         dsigmaalt_num_cross = dsigmaalt_num_cross + deltaalt_num_cross
 
     
-        sys.stderr.write("End of mainloop...\n")
+        sys.stderr.write(f"Rank({rank}): End of mainloop...\n")
 
         #
         # calculate delta-sigma and gamma-cross and write to file
         #
-        sys.stderr.write("Calculating delta-sigma...\n")
+        sys.stderr.write(f"Rank({rank}): Calculating delta-sigma...\n")
         dsigma      = dsigma_num / denom
         dsigma_cross = dsigma_num_cross / denom
         
         dsigmaalt      = dsigmaalt_num / denom
         dsigmaalt_cross = dsigmaalt_num_cross / denom
         
-        sys.stderr.write("Writing the output file...\n")
+        sys.stderr.write(f"Rank({rank}): Writing the output file...\n")
         pd.DataFrame(
                         { 'r_center'   : 0.5*(r_edges[1:] + r_edges[:-1]), # bin centers (linear)
                         'dsigma'     : dsigma,
@@ -210,7 +210,7 @@ def run_pipeline(config_fname):
         # break # for testing, stop after first iteration
 
     
-    sys.stderr.write("The end...\n")
+    sys.stderr.write(f"Rank({rank}): The end...\n")
     return
 
 # 
