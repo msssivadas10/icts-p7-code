@@ -191,7 +191,7 @@ def run_pipeline(config_fname):
                             index = False,                 # do not write the indices to the file
                             )
     
-        break # for testing, stop after first iteration
+        # break # for testing, stop after first iteration
 
     
     sys.stderr.write("The end...\n")
