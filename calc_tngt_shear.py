@@ -133,13 +133,17 @@ def calculate_dsigma_increments_vector(src, lenses, nnid, binedges):
 
         nn_lens = lenses.iloc[ lens_id ] # neighbour lenses
 
-        # choose only the lenses behind the source TODO: apply min distance
-        mask,  = np.where( nn_lens[ 'zredmagic' ].to_numpy() < z_mean_s )
-        nn_lens = nn_lens.iloc[ mask ]
-
         # lens parameters
         ra_l, dec_l, z_l, const_l, cdist_l = nn_lens[['ra', 'dec', 'zredmagic', 'const', 'cdist']].to_numpy().T
         
+        # choose only the lenses behind the source TODO: apply min distance
+        mask = ( z_l < z_mean_s )
+        ra_l, dec_l, z_l, const_l, cdist_l = ra_l[mask], dec_l[mask], z_l[mask], const_l[mask], cdist_l[mask]
+        
+        if not len( ra_l ):
+            nbins  = len( binedges ) - 1
+            return np.zeros( nbins ), np.zeros( nbins ), np.zeros( nbins ), np.zeros( nbins ), np.zeros( nbins ), np.zeros( nbins )
+
         theta_l = get_distance( ra_l, dec_l, ra_s, dec_s ) # angular distance in between in radian
         rad_l   = theta_l * cdist_l                        # radial distance in Mpc
 
