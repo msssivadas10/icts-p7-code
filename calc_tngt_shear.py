@@ -215,5 +215,26 @@ def calculate_dsigma_increments_vector(src, lenses, nnid, binedges):
         num_crs_alt += num_crs_alt_s
         den_all     += den_all_s
         npairs      += npairs_s
+
+    #
+    # using map and sum: TODO: check memory usage
+    #
+    # def _calaculate_for_src2(ra_s, dec_s, z_mean_s, cdist_mean_s, z_mc_s, 
+    #                         cdist_mc_s, e1_s, e2_s, R_s, w_s, lens_id):
+        
+    #     (
+    #         num_tan_s, num_crs_s, den_all_s, num_tan_alt_s, num_crs_alt_s, npairs_s
+    #     ) = _calaculate_for_src( ra_s, dec_s, z_mean_s, cdist_mean_s, z_mc_s, 
+    #                              cdist_mc_s, e1_s, e2_s, R_s, w_s, lens_id 
+    #                         )
+    #     return np.array([num_tan_s, num_crs_s, den_all_s, num_tan_alt_s, num_crs_alt_s, npairs_s])
+    
+    # (
+    #     num_tan, num_crs, den_all, num_tan_alt, num_crs_alt, npairs
+    # ) = np.array( sum( map( _calaculate_for_src2, 
+    #                     ra, dec, z_mean, cdist_mean, z_mc, cdist_mc, e1, e2, R, w, nnid 
+    #                 ) 
+    #             ) 
+    #         )
     
     return num_tan, num_crs, den_all, num_tan_alt, num_crs_alt, npairs
