@@ -157,7 +157,7 @@ def run_pipeline(config_fname):
         #
         sys.stderr.write(f"Rank({rank}): Creating the source tree...\n")
         __t0 = time.time()
-        src_bt = BallTree( data = lenses[['dec', 'ra']].to_numpy() )
+        src_bt = BallTree( data = src_i[['dec', 'ra']].to_numpy() )
         sys.stderr.write(f"Rank({rank}): Created the source tree in {time.time() - __t0} sec \n")
 
         # find the nearest neighbours using the maximum radius
