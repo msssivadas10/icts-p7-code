@@ -14,7 +14,7 @@ from scipy.interpolate import CubicSpline   # for interpolations
 #from sklearn.neighbors import BallTree      # for nearest neighbours
 from kdtreecode import BallTree             # for nearest neighbours
 from reading_data_shape_redshift_catalog import reading_lens_params, reading_data_sources # for loading the catalogs
-from calc_tngt_shear import get_lens_constants, calculate_dsigma_increments # for calculating delta-sigma
+from calc_tngt_shear import get_lens_constants, calculate_dsigma_increments, calculate_dsigma_increments_vector # for calculating delta-sigma
 
 try:
     from mpi4py import MPI
@@ -175,7 +175,8 @@ def run_pipeline(config_fname):
         sys.stderr.write(f"Rank({rank}): Calculating increments...\n")
         __t0 = time.time()
         #delta_num, delta_num_cross, delta_den = calculate_dsigma_increments( src_i, lenses, nnid, dist, r_edges )
-        delta_num, delta_num_cross, delta_den, deltaalt_num, deltaalt_num_cross, delta_npairs = calculate_dsigma_increments( src_i, lenses, nnid, r_edges )
+        # delta_num, delta_num_cross, delta_den, deltaalt_num, deltaalt_num_cross, delta_npairs = calculate_dsigma_increments( src_i, lenses, nnid, r_edges )
+        delta_num, delta_num_cross, delta_den, deltaalt_num, deltaalt_num_cross, delta_npairs = calculate_dsigma_increments_vector( src_i, lenses, nnid, r_edges ) # vectorized
         sys.stderr.write(f"Completed in {time.time() - __t0:,} sec\n")
         
         dsigma_num      = dsigma_num + delta_num

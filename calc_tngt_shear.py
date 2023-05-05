@@ -191,7 +191,9 @@ def calculate_dsigma_increments_vector(src, lenses, nnid, binedges):
     R = 0.5 * ( src['R11'] + src['R22'] ).to_numpy()
 
     nbins  = len( binedges ) - 1
-    num_tan, num_crs, den_all, num_tan_alt, num_crs_alt = np.zeros( nbins ), np.zeros( nbins ), np.zeros( nbins ), np.zeros( nbins ), np.zeros( nbins )
+    (
+        num_tan, num_crs, den_all, num_tan_alt, num_crs_alt
+    )      = np.zeros( nbins ), np.zeros( nbins ), np.zeros( nbins ), np.zeros( nbins ), np.zeros( nbins )
     npairs = np.zeros( nbins, dtype = int )
 
     # FIXME replace loop with `map` and `sum`?
@@ -200,13 +202,14 @@ def calculate_dsigma_increments_vector(src, lenses, nnid, binedges):
             num_tan_s, num_crs_s, den_all_s, num_tan_alt_s, num_crs_alt_s, npairs_s
         ) = _calaculate_for_src( ra[s], dec[s], z_mean[s], cdist_mean[s], 
                                  z_mc[s], cdist_mc[s], e1[s], e2[s], R[s], 
-                                 w[s], nnid[s] )
+                                 w[s], nnid[s] 
+                            )
         
-        num_tan += num_tan_s
-        num_crs += num_crs_s
+        num_tan     += num_tan_s
+        num_crs     += num_crs_s
         num_tan_alt += num_tan_alt_s
         num_crs_alt += num_crs_alt_s
-        den_all += den_all_s
-        npairs  += npairs_s
+        den_all     += den_all_s
+        npairs      += npairs_s
     
     return num_tan, num_crs, den_all, num_tan_alt, num_crs_alt, npairs
