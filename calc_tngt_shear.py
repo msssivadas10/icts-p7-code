@@ -146,8 +146,8 @@ def calculate_dsigma_increments_vector(src, lenses, nnid, binedges):
         # idx  = np.digitize( rad_l, binedges ) # bin number each radial distance falls
         
         # selecting only lenses within bin range
-        mask = ( idx == 0 ) | ( idx == len( binedges ) ) 
-        ra_l, dec_l, z_l, const_l, cdist_l, theta_l, rad_l, idx = ra_l[ mask ], dec_l[ mask ], z_l[ mask ], const_l[ mask ], cdist_l[ mask ], theta_l[ mask ], rad_l[ mask ], idx[ mask ]-1
+        # mask = ( idx == 0 ) | ( idx == len( binedges ) ) 
+        # ra_l, dec_l, z_l, const_l, cdist_l, theta_l, rad_l, idx = ra_l[ mask ], dec_l[ mask ], z_l[ mask ], const_l[ mask ], cdist_l[ mask ], theta_l[ mask ], rad_l[ mask ], idx[ mask ]-1
         # NOTE: idx is starting with 1, not 0 
 
         abs_sin_t = np.abs( np.sin( theta_l ) )
