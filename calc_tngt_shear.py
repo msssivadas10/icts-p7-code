@@ -197,7 +197,7 @@ def calculate_dsigma_increments_vector(src, lenses, nnid, binedges):
     npairs = np.zeros( nbins, dtype = int )
 
     # FIXME replace loop with `map` and `sum`?
-    for s in range( src.shape[0] ):
+    for s in tqdm(range( src.shape[0] ) ):
         (
             num_tan_s, num_crs_s, den_all_s, num_tan_alt_s, num_crs_alt_s, npairs_s
         ) = _calaculate_for_src( ra[s], dec[s], z_mean[s], cdist_mean[s], 
