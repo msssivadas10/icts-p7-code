@@ -122,7 +122,7 @@ def calculate_dsigma_increments (src,lenses,nnid,binedges) :
             
  
 # vectorized vaersion of `calculate_dsigma_increments`
-def calculate_dsigma_increments_vector(src, lenses, nnid, binedges):
+def calculate_dsigma_increments_vector_s(src, lenses, nnid, binedges):
 
     # calculation for single source
     def _calaculate_for_src(ra_s, dec_s, z_mean_s, cdist_mean_s, z_mc_s, 
@@ -241,3 +241,94 @@ def calculate_dsigma_increments_vector(src, lenses, nnid, binedges):
     #         )
     
     return num_tan, num_crs, den_all, num_tan_alt, num_crs_alt, npairs
+
+
+# vectorized vaersion of `calculate_dsigma_increments`
+def calculate_dsigma_increments_vector_l(src, lenses, nnid, binedges, z_diff = 0.3):
+
+    # calculation for single source
+    def _calaculate_for_lens(ra_l, dec_l, z_l, const_l, cdist_l, src_id):
+
+        # get nearest sources
+        src_id = np.array( src_id )
+        nn_src = src.iloc[ src_id ]
+
+        # source parameters
+        (
+            ra_s, dec_s, z_mean_s, cdist_mean_s, z_mc_s, cdist_mc_s, e1_s, e2_s, w_s
+        )   = nn_src[['ra', 'dec', 'zmean_sof', 'cdist_mean', 'zmc_sof', 'cdist_mc', 'e_1', 'e_2', 'weight']].to_numpy().T
+        R_s = 0.5 * ( src['R11'] + src['R22'] ).to_numpy()
+
+        # chose only sources behind the lenses, with min distance
+        mask = ( z_l + z_diff < z_mean_s )
+        ra_s, dec_s, z_mean_s, cdist_s, z_mc_s, cdist_mc_s, e1_s, e2_s, w_s, R_s = ra_s[ mask ], dec_s[ mask ], z_mean_s[ mask ], cdist_s[ mask ], z_mc_s[ mask ], cdist_mc_s[ mask ], e1_s[ mask ], e2_s[ mask ], w_s[ mask ], R_s[ mask ]
+
+        if not len( ra_s ):
+            nbins = len( binedges ) - 1
+            return np.zeros( nbins ), np.zeros( nbins ), np.zeros( nbins ), np.zeros( nbins ), np.zeros( nbins ), np.zeros( nbins )
+        
+        theta = get_distance( ra_l, dec_l, ra_s, dec_s ) # angular distance in between in radian
+        rad_l   = theta * cdist_l                        # radial distance in Mpc
+
+        abs_sin_t = np.abs( np.sin( theta ) )
+
+        sin_p2  = ( -np.sin( dec_l ) * np.cos( dec_s ) 
+                        + np.sin( dec_s ) * np.cos( dec_l ) * np.cos( ra_l - ra_s ) ) / abs_sin_t
+
+        cos_p2  = np.sin( ra_s - ra_l ) * np.cos( dec_s ) / abs_sin_t
+        cos2_p2 = cos_p2**2
+        cos_2p2, sin_2p2 = 2.*cos2_p2 - 1., 2.*sin_p2*cos_p2 # double angle values
+
+        f1 = w_s * const_l * ( 1. - cdist_l / cdist_mean_s ) * R_s # a factor appearing in multiple times 
+        f2 = const_l * ( 1. - cdist_l / cdist_mc_s ) * R_s         # a factor apperaing in denominator
+
+        e_tan = -e1_s * cos_2p2 - e2_s * sin_2p2 # tangential ellipsicity
+        e_crs =  e1_s * sin_2p2 - e2_s * cos_2p2 # cross direction ellipsicity
+
+        # NOTE: alternative version with sign of e2 reversed
+        e_tan_alt = -e1_s * cos_2p2 - e2_s * sin_2p2 # tangential ellipsicity
+        e_crs_alt =  e1_s * sin_2p2 - e2_s * cos_2p2 # cross direction ellipsicity
+
+        # using binned_statistics to bin the values with increments as weights
+        bstats = binned_statistic( rad_l, 
+                                   values = [ f1 * e_tan,              # numerator for tangential part
+                                              f1 * e_crs,              # numerator for cross part
+                                              f1 * e_tan_alt,          # numerator for tangential part
+                                              f1 * e_crs_alt,          # numerator for cross part
+                                              f1 * f2,                 # denominator for both part
+                                              np.ones( len( rad_l ) ), # pair counting
+                                        ],
+                                  bins = binedges,
+                                  statistic = 'sum',
+                            )
+        num_tan, num_crs, num_tan_alt, num_crs_alt, den_all, npairs = bstats.statistic
+        
+        return num_tan, num_crs, den_all, num_tan_alt, num_crs_alt, npairs
+    
+    # calculate the values for all sources
+    ra, dec, z, const, cdist = lenses[['ra', 'dec', 'zredmagic', 'const', 'cdist']].to_numpy().T
+
+    ################################################################################
+    # USING FOR LOOP
+    ################################################################################ 
+    nbins  = len( binedges ) - 1
+    (
+        num_tan, num_crs, den_all, num_tan_alt, num_crs_alt
+    )      = np.zeros( nbins ), np.zeros( nbins ), np.zeros( nbins ), np.zeros( nbins ), np.zeros( nbins )
+    npairs = np.zeros( nbins )
+
+    for l in tqdm( range( lenses.shape[0] ) ):
+        (
+            num_tan_s, num_crs_s, den_all_s, num_tan_alt_s, num_crs_alt_s, npairs_s
+        ) = _calaculate_for_lens( ra[l], dec[l], z[l], const[l], cdist[l], nnid[l] )
+
+        num_tan     += num_tan_s
+        num_crs     += num_crs_s
+        num_tan_alt += num_tan_alt_s
+        num_crs_alt += num_crs_alt_s
+        den_all     += den_all_s
+        npairs      += npairs_s
+
+    return num_tan, num_crs, den_all, num_tan_alt, num_crs_alt, npairs
+
+
