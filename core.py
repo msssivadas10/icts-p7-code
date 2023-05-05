@@ -188,8 +188,6 @@ def run_pipeline(config_fname):
 
         num_pairs += delta_npairs
     
-        sys.stderr.write(f"Rank({rank}): End of mainloop...\n")
-
         #
         # calculate delta-sigma and gamma-cross and write to file
         #
@@ -218,7 +216,7 @@ def run_pipeline(config_fname):
                             )
     
         # break # for testing, stop after first iteration
-
+    sys.stderr.write(f"Rank({rank}): End of mainloop...\n")
     
     sys.stderr.write(f"Rank({rank}): The end...\n")
     return
