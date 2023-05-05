@@ -132,10 +132,10 @@ def run_pipeline(config_fname):
     # nnDB   = [] # a database for the holding the source chunks and the neighbour data
     # dsigma = [] # to store the delta-sigma values (TODO: check this)
 
-    dsigma          = np.zeros( r_bins - 1 )
-    dsigma_cross    = np.zeros( r_bins - 1 )
-    dsigmaalt       = np.zeros( r_bins - 1 )
-    dsigmaalt_cross = np.zeros( r_bins - 1 )
+    # dsigma          = np.zeros( r_bins - 1 )
+    # dsigma_cross    = np.zeros( r_bins - 1 )
+    # dsigmaalt       = np.zeros( r_bins - 1 )
+    # dsigmaalt_cross = np.zeros( r_bins - 1 )
 
     sys.stderr.write(f"Rank({rank}): Starting mainloop...\n")
     for i in range( src_size // chunk_size + 1 ):
@@ -198,11 +198,10 @@ def run_pipeline(config_fname):
         sys.stderr.write(f"Rank({rank}): Calculating delta-sigma...\n")
 
 
-        # adding contribution from each process
-        dsigma          = dsigma          + dsigma_num / denom
-        dsigma_cross    = dsigma_cross    + dsigma_num_cross / denom
-        dsigmaalt       = dsigmaalt       + dsigmaalt_num / denom
-        dsigmaalt_cross = dsigmaalt_cross + dsigmaalt_num_cross / denom
+        dsigma          = dsigma_num / denom
+        dsigma_cross    = dsigma_num_cross / denom
+        dsigmaalt       = dsigmaalt_num / denom
+        dsigmaalt_cross = dsigmaalt_num_cross / denom
         
         sys.stderr.write(f"Rank({rank}): Writing the output file...\n")
         pd.DataFrame(
