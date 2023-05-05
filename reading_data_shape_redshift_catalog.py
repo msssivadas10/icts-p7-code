@@ -36,7 +36,7 @@ def reading_DNF_redshift(file_data, params, shear_flag="unsheared", start=0, end
         
     return pd.DataFrame(data)
 
-def reading_lens_params(filename, jacknife_idx, z_min=0.01, z_max=4, frac=0.01):
+def reading_lens_params(filename, jacknife_idx, z_min=0.01, z_max=4, frac=0.01, zbins=5):
     
     lens_params = ['coadd_object_id', 'ra', 'dec', 'zredmagic', 'lum_z']
     
@@ -44,9 +44,13 @@ def reading_lens_params(filename, jacknife_idx, z_min=0.01, z_max=4, frac=0.01):
     header = fits.getheader(filename)
     
     # selecting a fraction 
-    idx = np.array(np.random.random(size=data["lum_z"].size)<frac) \
-            & np.array(data["zredmagic"]>z_min) \
-            & np.array(data["zredmagic"]<z_max)
+    zdiff = (z_max - z_min)/zbins
+    idx = data["ra"] != data["ra"]
+    for ii in range(zbins):
+        iidx = (data["zredmagic"]>z_min+ii*zdiff) & (data["zredmagic"]<=z_min+(ii+1)*zdiff)
+        lum_z = data["lum_z"][iidx]
+        lumcut = np.percentile(lum_z, 100*(1.-frac))
+        idx = idx | (iidx & (data["lum_z"]>=lumcut)) 
     
     data_dict = {}
     for key in lens_params:
