@@ -95,11 +95,11 @@ def run_pipeline(config_fname):
     #
     # create a ball-tree using the lens positions for efficent neighbor search
     #
-    sys.stderr.write(f"Rank({rank}): Creating the lens tree...\n")
-    lens_bt = BallTree( data      = lenses[['dec', 'ra']].to_numpy(), 
-                        # leaf_size = 20, 
-                        # metric    = 'haversine' # metric on a spherical surface
-                    )
+    # sys.stderr.write(f"Rank({rank}): Creating the lens tree...\n")
+    # lens_bt = BallTree( data      = lenses[['dec', 'ra']].to_numpy(), 
+    #                     # leaf_size = 20, 
+    #                     # metric    = 'haversine' # metric on a spherical surface
+    #                 )
     #lens_bt = BallTree( lenses[['dec', 'ra']].to_numpy(), 
     #                )
 
@@ -145,6 +145,14 @@ def run_pipeline(config_fname):
         src_i['cdist_mean'] = comoving_distance( src_i['zmean_sof'] ) # using mean redshift
         src_i['cdist_mc']   = comoving_distance( src_i['zmc_sof'] )   # using mc redshift
 
+        #
+        # create a ball-tree using the lens positions for efficent neighbor search
+        #
+        sys.stderr.write(f"Rank({rank}): Creating the source tree...\n")
+        __t0 = time.time()
+        src_bt = BallTree( data = src_i[['dec', 'ra']].to_numpy() )
+        sys.stderr.write(f"Rank({rank}): Created source tree in {time.time() - __t0} sec\n")
+
         # find the nearest neighbours using the maximum radius
         sys.stderr.write(f"Rank({rank}): Searching for neighbours...\n")
         __t0 = time.time()
@@ -153,21 +161,9 @@ def run_pipeline(config_fname):
         #                                   return_distance = True 
         #                                )
 
-        nnid = lens_bt.query_radius(src_i[['dec', 'ra']].to_numpy(), 
-                                    theta_max)
+        nnid = src_bt.query_radius( src_i[['dec', 'ra']].to_numpy(), theta_max )
         sys.stderr.write(f"Rank({rank}): Completed in {time.time() - __t0:,} sec\n")
         
-        # NOTE 1: `nnid` and `dist` are arrays of arrays so that, each sub-array 
-        # correspond to neighbours of a specific source. i.e., `i`-th sub-array will 
-        # match to the `i`-th source in the sources dataset 
-        #
-        # NOTE 2: combining `nnid` and `dist` for a specific source (specified by index) 
-        # into a 2d array with col-1 => index or id of the lenses and col-2 => distance.
-        # if the source has the index `j` in the source dataset, then corresponding 
-        # neighbours will be in at index `j` in the list
-        # nn_i = list( map(lambda __o: np.stack([__o], 1), zip( nnid, dist )) ) # join the 2 arrays along col
-        # nnDB.append([ src_i, nn_i ])
-
         # 
         # calculating the average delta-sigma value
         #
@@ -179,9 +175,9 @@ def run_pipeline(config_fname):
         delta_num, delta_num_cross, delta_den, deltaalt_num, deltaalt_num_cross, delta_npairs = calculate_dsigma_increments_vector( src_i, lenses, nnid, r_edges ) # vectorized
         sys.stderr.write(f"Completed in {time.time() - __t0:,} sec\n")
         
-        dsigma_num      = dsigma_num + delta_num
+        dsigma_num       = dsigma_num + delta_num
         dsigma_num_cross = dsigma_num_cross + delta_num_cross
-        denom           = denom + delta_den
+        denom            = denom + delta_den
 
         dsigmaalt_num      = dsigmaalt_num + deltaalt_num
         dsigmaalt_num_cross = dsigmaalt_num_cross + deltaalt_num_cross
@@ -211,7 +207,7 @@ def run_pipeline(config_fname):
                         'dsigmaalt_num' : dsigmaalt_num,
                         'dsigmaalt_num_cross': dsigmaalt_num_cross,
                         'denom': denom, 
-                    }).to_csv( f"{inputs[ 'files' ][ 'output' ]}.{i:03d}", # output filename (shuld be `i` not rank, otherwise, rewritten at `size`)
+                    }).to_csv( f"{inputs[ 'files' ][ 'output' ]}.{rank:03d}", 
                             index = False,                 # do not write the indices to the file
                             )
     
