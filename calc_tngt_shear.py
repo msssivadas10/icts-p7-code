@@ -261,7 +261,7 @@ def calculate_dsigma_increments_vector_l(src, lenses, nnid, binedges, z_diff = 0
 
         # chose only sources behind the lenses, with min distance
         mask = ( z_l + z_diff < z_mean_s )
-        ra_s, dec_s, z_mean_s, cdist_s, z_mc_s, cdist_mc_s, e1_s, e2_s, w_s, R_s = ra_s[ mask ], dec_s[ mask ], z_mean_s[ mask ], cdist_s[ mask ], z_mc_s[ mask ], cdist_mc_s[ mask ], e1_s[ mask ], e2_s[ mask ], w_s[ mask ], R_s[ mask ]
+        ra_s, dec_s, z_mean_s, cdist_mean_s, z_mc_s, cdist_mc_s, e1_s, e2_s, w_s, R_s = ra_s[ mask ], dec_s[ mask ], z_mean_s[ mask ], cdist_mean_s[ mask ], z_mc_s[ mask ], cdist_mc_s[ mask ], e1_s[ mask ], e2_s[ mask ], w_s[ mask ], R_s[ mask ]
 
         if not len( ra_s ):
             nbins = len( binedges ) - 1
