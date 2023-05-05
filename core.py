@@ -211,7 +211,7 @@ def run_pipeline(config_fname):
                         'dsigmaalt_num' : dsigmaalt_num,
                         'dsigmaalt_num_cross': dsigmaalt_num_cross,
                         'denom': denom, 
-                    }).to_csv( f"{inputs[ 'files' ][ 'output' ]}.{i:03d}", # output filename (shuld be `i` not rank, otherwise, rewritten at `size`)
+                    }).to_csv( f"{inputs[ 'files' ][ 'output' ]}.{rank:03d}", # output filename (shuld be `i` not rank, otherwise, rewritten at `size`)
                             index = False,                 # do not write the indices to the file
                             )
     
