@@ -51,6 +51,7 @@ def run_pipeline(config_fname):
     # redshift range
     z_min = inputs[ 'z_min' ]
     z_max = inputs[ 'z_max' ]
+    z_diff= inputs[ 'z_diff' ]
 
     #
     # calculate and interpolate the comoving distances for future use
@@ -180,7 +181,7 @@ def run_pipeline(config_fname):
         #delta_num, delta_num_cross, delta_den = calculate_dsigma_increments( src_i, lenses, nnid, dist, r_edges )
         # delta_num, delta_num_cross, delta_den, deltaalt_num, deltaalt_num_cross, delta_npairs = calculate_dsigma_increments( src_i, lenses, nnid, r_edges )
         # delta_num, delta_num_cross, delta_den, deltaalt_num, deltaalt_num_cross, delta_npairs = calculate_dsigma_increments_vector( src_i, lenses, nnid, r_edges ) # vectorized
-        delta_num, delta_num_cross, delta_den, deltaalt_num, deltaalt_num_cross, delta_npairs = calculate_dsigma_increments_vector_l( src_i, lenses, nnid, r_edges, z_diff = 0.3 ) # vectorized
+        delta_num, delta_num_cross, delta_den, deltaalt_num, deltaalt_num_cross, delta_npairs = calculate_dsigma_increments_vector_l( src_i, lenses, nnid, r_edges, z_diff ) # vectorized
         sys.stderr.write(f"Completed in {time.time() - __t0:,} sec\n")
         
         dsigma_num      = dsigma_num + delta_num
