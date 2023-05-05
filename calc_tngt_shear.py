@@ -257,11 +257,10 @@ def calculate_dsigma_increments_vector_l(src, lenses, nnid, binedges, z_diff = 0
         (
             ra_s, dec_s, z_mean_s, cdist_mean_s, z_mc_s, cdist_mc_s, e1_s, e2_s, w_s
         )   = nn_src[['ra', 'dec', 'zmean_sof', 'cdist_mean', 'zmc_sof', 'cdist_mc', 'e_1', 'e_2', 'weight']].to_numpy().T
-        R_s = 0.5 * ( src['R11'] + src['R22'] ).to_numpy()
+        R_s = 0.5 * ( nn_src['R11'] + nn_src['R22'] ).to_numpy()
 
         # chose only sources behind the lenses, with min distance
         mask = ( z_l + z_diff < z_mean_s )
-        print(len(mask))
         ra_s, dec_s, z_mean_s, cdist_mean_s, z_mc_s, cdist_mc_s, e1_s, e2_s, w_s, R_s = ra_s[ mask ], dec_s[ mask ], z_mean_s[ mask ], cdist_mean_s[ mask ], z_mc_s[ mask ], cdist_mc_s[ mask ], e1_s[ mask ], e2_s[ mask ], w_s[ mask ], R_s[ mask ]
 
         if not len( ra_s ):
