@@ -14,7 +14,8 @@ from scipy.interpolate import CubicSpline   # for interpolations
 #from sklearn.neighbors import BallTree      # for nearest neighbours
 from kdtreecode import BallTree             # for nearest neighbours
 from reading_data_shape_redshift_catalog import reading_lens_params, reading_data_sources # for loading the catalogs
-from calc_tngt_shear import get_lens_constants, calculate_dsigma_increments # for calculating delta-sigma
+# from calc_tngt_shear import get_lens_constants, calculate_dsigma_increments # for calculating delta-sigma
+from calc_tngt_shear import get_lens_constants, calculate_dsigma_increments_vector_l # for calculating delta-sigma
 
 try:
     from mpi4py import MPI
@@ -95,11 +96,11 @@ def run_pipeline(config_fname):
     #
     # create a ball-tree using the lens positions for efficent neighbor search
     #
-    sys.stderr.write(f"Rank({rank}): Creating the lens tree...\n")
-    lens_bt = BallTree( data      = lenses[['dec', 'ra']].to_numpy(), 
-                        # leaf_size = 20, 
-                        # metric    = 'haversine' # metric on a spherical surface
-                    )
+    # sys.stderr.write(f"Rank({rank}): Creating the lens tree...\n")
+    # lens_bt = BallTree( data      = lenses[['dec', 'ra']].to_numpy(), 
+    #                     # leaf_size = 20, 
+    #                     # metric    = 'haversine' # metric on a spherical surface
+    #                 )
     #lens_bt = BallTree( lenses[['dec', 'ra']].to_numpy(), 
     #                )
 
@@ -113,15 +114,16 @@ def run_pipeline(config_fname):
     src_size   = srcs_file["catalog"]["unsheared"]["e_1"].shape[0] # size of the sources
     chunk_size = inputs[ 'chunk_size' ]   # size of each sub catalog
 
+    jk_patches=max(lenses["jack_idx"]) # number of jackknife patches
+
     #
     # read the catalogs and calculate the delta-sigma values 
     #
-    dsigma_num       = np.zeros( r_bins - 1 )
-    denom            = np.zeros( r_bins - 1 )
-    dsigma_num_cross = np.zeros( r_bins - 1 )
-
-    dsigmaalt_num       = np.zeros( r_bins - 1 )
-    dsigmaalt_num_cross = np.zeros( r_bins - 1 )
+    dsigma_num          = np.zeros( r_bins - 1, jk_patches )
+    denom               = np.zeros( r_bins - 1, jk_patches )
+    dsigma_num_cross    = np.zeros( r_bins - 1, jk_patches )
+    dsigmaalt_num       = np.zeros( r_bins - 1, jk_patches )
+    dsigmaalt_num_cross = np.zeros( r_bins - 1, jk_patches )
 
     num_pairs = np.zeros( r_bins - 1, dtype=int)
 
@@ -130,6 +132,12 @@ def run_pipeline(config_fname):
 
     # nnDB   = [] # a database for the holding the source chunks and the neighbour data
     # dsigma = [] # to store the delta-sigma values (TODO: check this)
+
+    # dsigma          = np.zeros( r_bins - 1, jk_patches ) 
+    # dsigma_cross    = np.zeros( r_bins - 1, jk_patches ) 
+    # dsigmaalt       = np.zeros( r_bins - 1, jk_patches ) 
+    # dsigmaalt_cross = np.zeros( r_bins - 1, jk_patches ) 
+
     sys.stderr.write(f"Rank({rank}): Starting mainloop...\n")
     for i in range( src_size // chunk_size + 1 ):
 
@@ -145,6 +153,14 @@ def run_pipeline(config_fname):
         src_i['cdist_mean'] = comoving_distance( src_i['zmean_sof'] ) # using mean redshift
         src_i['cdist_mc']   = comoving_distance( src_i['zmc_sof'] )   # using mc redshift
 
+        #
+        # create a ball-tree using the lens positions for efficent neighbor search
+        #
+        sys.stderr.write(f"Rank({rank}): Creating the sources tree...\n")
+        __t0 = time.time()
+        lens_bt = BallTree( data = src_i[['dec', 'ra']].to_numpy() )
+        sys.stderr.write(f"Rank({rank}): Created the sources tree in {time.time() - __t0} sec\n")
+
         # find the nearest neighbours using the maximum radius
         sys.stderr.write(f"Rank({rank}): Searching for neighbours...\n")
         __t0 = time.time()
@@ -153,8 +169,7 @@ def run_pipeline(config_fname):
         #                                   return_distance = True 
         #                                )
 
-        nnid = lens_bt.query_radius(src_i[['dec', 'ra']].to_numpy(), 
-                                    theta_max)
+        nnid = lens_bt.query_radius(lenses[['dec', 'ra']].to_numpy(), theta_max)
         sys.stderr.write(f"Rank({rank}): Completed in {time.time() - __t0:,} sec\n")
         
         # NOTE 1: `nnid` and `dist` are arrays of arrays so that, each sub-array 
@@ -175,14 +190,13 @@ def run_pipeline(config_fname):
         sys.stderr.write(f"Rank({rank}): Calculating increments...\n")
         __t0 = time.time()
         #delta_num, delta_num_cross, delta_den = calculate_dsigma_increments( src_i, lenses, nnid, dist, r_edges )
-        delta_num, delta_num_cross, delta_den, deltaalt_num, deltaalt_num_cross, delta_npairs = calculate_dsigma_increments( src_i, lenses, nnid, r_edges )
+        delta_num, delta_num_cross, delta_den, deltaalt_num, deltaalt_num_cross, delta_npairs = calculate_dsigma_increments_vector_l( src_i, lenses, nnid, r_edges )
         sys.stderr.write(f"Completed in {time.time() - __t0:,} sec\n")
         
-        dsigma_num      = dsigma_num + delta_num
-        dsigma_num_cross = dsigma_num_cross + delta_num_cross
-        denom           = denom + delta_den
-
-        dsigmaalt_num      = dsigmaalt_num + deltaalt_num
+        dsigma_num          = dsigma_num + delta_num
+        dsigma_num_cross    = dsigma_num_cross + delta_num_cross
+        denom               = denom + delta_den
+        dsigmaalt_num       = dsigmaalt_num + deltaalt_num
         dsigmaalt_num_cross = dsigmaalt_num_cross + deltaalt_num_cross
 
         num_pairs += delta_npairs
@@ -193,10 +207,9 @@ def run_pipeline(config_fname):
         # calculate delta-sigma and gamma-cross and write to file
         #
         sys.stderr.write(f"Rank({rank}): Calculating delta-sigma...\n")
-        dsigma      = dsigma_num / denom
-        dsigma_cross = dsigma_num_cross / denom
-        
-        dsigmaalt      = dsigmaalt_num / denom
+        dsigma          = dsigma_num / denom
+        dsigma_cross    = dsigma_num_cross / denom
+        dsigmaalt       = dsigmaalt_num / denom
         dsigmaalt_cross = dsigmaalt_num_cross / denom
         
         sys.stderr.write(f"Rank({rank}): Writing the output file...\n")
