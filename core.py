@@ -95,11 +95,11 @@ def run_pipeline(config_fname):
     #
     # create a ball-tree using the lens positions for efficent neighbor search
     #
-    # sys.stderr.write(f"Rank({rank}): Creating the lens tree...\n")
-    # lens_bt = BallTree( data      = lenses[['dec', 'ra']].to_numpy(), 
-    #                     # leaf_size = 20, 
-    #                     # metric    = 'haversine' # metric on a spherical surface
-    #                 )
+    sys.stderr.write(f"Rank({rank}): Creating the lens tree...\n")
+    lens_bt = BallTree( data      = lenses[['dec', 'ra']].to_numpy(), 
+                        # leaf_size = 20, 
+                        # metric    = 'haversine' # metric on a spherical surface
+                    )
     #lens_bt = BallTree( lenses[['dec', 'ra']].to_numpy(), 
     #                )
 
@@ -145,14 +145,6 @@ def run_pipeline(config_fname):
         src_i['cdist_mean'] = comoving_distance( src_i['zmean_sof'] ) # using mean redshift
         src_i['cdist_mc']   = comoving_distance( src_i['zmc_sof'] )   # using mc redshift
 
-        #
-        # create a ball-tree using the lens positions for efficent neighbor search
-        #
-        sys.stderr.write(f"Rank({rank}): Creating the source tree...\n")
-        __t0 = time.time()
-        src_bt = BallTree( data = src_i[['dec', 'ra']].to_numpy() )
-        sys.stderr.write(f"Rank({rank}): Created source tree in {time.time() - __t0} sec\n")
-
         # find the nearest neighbours using the maximum radius
         sys.stderr.write(f"Rank({rank}): Searching for neighbours...\n")
         __t0 = time.time()
@@ -161,7 +153,7 @@ def run_pipeline(config_fname):
         #                                   return_distance = True 
         #                                )
 
-        nnid = src_bt.query_radius( src_i[['dec', 'ra']].to_numpy(), theta_max )
+        nnid = lens_bt.query_radius( src_i[['dec', 'ra']].to_numpy(), theta_max )
         sys.stderr.write(f"Rank({rank}): Completed in {time.time() - __t0:,} sec\n")
         
         # 
