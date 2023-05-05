@@ -5,6 +5,7 @@
 import numpy as np
 from tqdm import tqdm
 from kdtreecode import get_xxyyzz_simple
+from scipy.stats import binned_statistic
 
 def get_distance(lra, ldec, sra, sdec):
     xxl, yyl, zzl = get_xxyyzz_simple(lra,ldec)
@@ -120,3 +121,92 @@ def calculate_dsigma_increments (src,lenses,nnid,binedges) :
     return num_tan, num_cross, den, numalt_tan, numalt_cross, numpairs
             
  
+# vectorized vaersion of `calculate_dsigma_increments`
+def calculate_dsigma_increments_vector(src, lenses, nnid, binedges):
+
+    # calculation for single source
+    def _calaculate_for_src(ra_s, dec_s, z_mean_s, cdist_mean_s, z_mc_s, 
+                            cdist_mc_s, e1_s, e2_s, R_s, w_s, lens_id):
+        
+
+        lens_id = np.array(lens_id)
+
+        nn_lens = lenses.iloc[ lens_id ] # neighbour lenses
+
+        # choose only the lenses behind the source TODO: apply min distance
+        mask,  = np.where( nn_lens[ 'zredmagic' ].to_numpy() < z_mean_s )
+        nn_lens = nn_lens.iloc[ mask ]
+
+        # lens parameters
+        ra_l, dec_l, z_l, const_l, cdist_l = nn_lens[['ra', 'dec', 'zredmagic', 'const', 'cdist']].to_numpy().T
+        
+        theta_l = get_distance( ra_l, dec_l, ra_s, dec_s ) # angular distance in between in radian
+        rad_l   = theta_l * cdist_l                        # radial distance in Mpc
+
+        # idx  = np.digitize( rad_l, binedges ) # bin number each radial distance falls
+        
+        # selecting only lenses within bin range
+        mask = ( idx == 0 ) | ( idx == len( binedges ) ) 
+        ra_l, dec_l, z_l, const_l, cdist_l, theta_l, rad_l, idx = ra_l[ mask ], dec_l[ mask ], z_l[ mask ], const_l[ mask ], cdist_l[ mask ], theta_l[ mask ], rad_l[ mask ], idx[ mask ]-1
+        # NOTE: idx is starting with 1, not 0 
+
+        abs_sin_t = np.abs( np.sin( theta_l ) )
+
+        sin_p2  = ( -np.sin( dec_l ) * np.cos( dec_s ) 
+                        + np.sin( dec_s ) * np.cos( dec_l ) * np.cos( ra_l - ra_s ) ) / abs_sin_t
+
+        cos_p2  = np.sin( ra_s - ra_l ) * np.cos( dec_s ) / abs_sin_t
+        cos2_p2 = cos_p2**2
+        cos_2p2, sin_2p2 = 2.*cos2_p2 - 1., 2.*sin_p2*cos_p2 # double angle values
+
+        f1 = w_s * const_l * ( 1. - cdist_l / cdist_mean_s ) * R_s # a factor appearing in multiple times 
+        f2 = const_l * ( 1. - cdist_l / cdist_mc_s ) * R_s         # a factor apperaing in denominator
+
+        e_tan = -e1_s * cos_2p2 - e2_s * sin_2p2 # tangential ellipsicity
+        e_crs =  e1_s * sin_2p2 - e2_s * cos_2p2 # cross direction ellipsicity
+
+        # NOTE: alternative version with sign of e2 reversed
+        e_tan_alt = -e1_s * cos_2p2 - e2_s * sin_2p2 # tangential ellipsicity
+        e_crs_alt =  e1_s * sin_2p2 - e2_s * cos_2p2 # cross direction ellipsicity
+
+        # using binned_statistics to bin the values with increments as weights
+        bstats = binned_statistic( rad_l, 
+                                   values = [ f1 * e_tan,              # numerator for tangential part
+                                              f1 * e_crs,              # numerator for cross part
+                                              f1 * e_tan_alt,          # numerator for tangential part
+                                              f1 * e_crs_alt,          # numerator for cross part
+                                              f1 * f2,                 # denominator for both part
+                                              np.ones( len( rad_l ) ), # pair counting
+                                        ],
+                                  bins = binedges,
+                                  statistic = 'sum',
+                            )
+        num_tan, num_crs, num_tan_alt, num_crs_alt, den_all, npairs = bstats.statistic
+        
+        return num_tan, num_crs, den_all, num_tan_alt, num_crs_alt, npairs
+    
+
+    # calculate the values for all sources
+    ra, dec, z_mean, cdist_mean, z_mc, cdist_mc, e1, e2, w = src[['ra', 'dec', 'zmean_sof', 'cdist_mean', 'zmc_sof', 'cdist_mc', 'e_1', 'e_2', 'weight']].to_numpy().T
+    R = 0.5 * ( src['R11'] + src['R22'] ).to_numpy()
+
+    nbins  = len( binedges ) - 1
+    num_tan, num_crs, den_all, num_tan_alt, num_crs_alt = np.zeros( nbins ), np.zeros( nbins ), np.zeros( nbins ), np.zeros( nbins ), np.zeros( nbins )
+    npairs = np.zeros( nbins, dtype = int )
+
+    # FIXME replace loop with `map` and `sum`?
+    for s in range( src.shape[0] ):
+        (
+            num_tan_s, num_crs_s, den_all_s, num_tan_alt_s, num_crs_alt_s, npairs_s
+        ) = _calaculate_for_src( ra[s], dec[s], z_mean[s], cdist_mean[s], 
+                                 z_mc[s], cdist_mc[s], e1[s], e2[s], R[s], 
+                                 w[s], nnid[s] )
+        
+        num_tan += num_tan_s
+        num_crs += num_crs_s
+        num_tan_alt += num_tan_alt_s
+        num_crs_alt += num_crs_alt_s
+        den_all += den_all_s
+        npairs  += npairs_s
+    
+    return num_tan, num_crs, den_all, num_tan_alt, num_crs_alt, npairs
