@@ -20,6 +20,7 @@ r_max:      20.
 r_bins:     21   # number of bins
 z_min:      0.2  # redshift minimum
 z_max:      0.7  # redshift maximum
-z_bins:     1001 # number of redshift bins 
+z_bins_intrp: 1001 # number of redshift bins for interpolation
+z_bins_selec: 5    # number of redshift bins for lens selection
 frac_bright: 0.01
 chunk_size: 1000000 # size of the source data chunks
