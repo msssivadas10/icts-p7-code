@@ -148,7 +148,10 @@ def lnprob_dk14(var: Union[tuple, list, ArrayLike], r_data: ArrayLike, data: Arr
 
     lnlike = -((data - dsd).T @  inv_cov @ (data - dsd))
     lnpost = lnlike + lnprior
-
+    
+    if np.isnan(lnpost):
+        return -np.inf
+        
     return lnpost
 
 # -----------------------------------------------------------------
