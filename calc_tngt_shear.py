@@ -170,8 +170,8 @@ def calculate_dsigma_increments_vector_s(src, lenses, nnid, binedges):
         e_crs =  e1_s * sin_2p2 - e2_s * cos_2p2 # cross direction ellipsicity
 
         # NOTE: alternative version with sign of e2 reversed
-        e_tan_alt = -e1_s * cos_2p2 - e2_s * sin_2p2 # tangential ellipsicity
-        e_crs_alt =  e1_s * sin_2p2 - e2_s * cos_2p2 # cross direction ellipsicity
+        e_tan_alt = -e1_s * cos_2p2 + e2_s * sin_2p2 # tangential ellipsicity
+        e_crs_alt =  e1_s * sin_2p2 + e2_s * cos_2p2 # cross direction ellipsicity
 
         # using binned_statistics to bin the values with increments as weights
         bstats = binned_statistic( rad_l, 
