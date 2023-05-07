@@ -201,21 +201,21 @@ def run_pipeline(config_fname):
 
         dsigma          = dsigma_num / denom
         dsigma_cross    = dsigma_num_cross / denom
-        dsigmaalt       = dsigmaalt_num / denom
-        dsigmaalt_cross = dsigmaalt_num_cross / denom
+        # dsigmaalt       = dsigmaalt_num / denom
+        # dsigmaalt_cross = dsigmaalt_num_cross / denom
         
         sys.stderr.write(f"Rank({rank}): Writing the output file...\n")
         pd.DataFrame(
                         { 'r_center'         : 0.5*(r_edges[1:] + r_edges[:-1]), # bin centers (linear)
                         'dsigma'             : dsigma,
-                        'dsigmaalt'          : dsigmaalt,
+                        # 'dsigmaalt'          : dsigmaalt,
                         'num_pairs'          : num_pairs,
                         'dsigma_cross'       : dsigma_cross, 
                         'dsigma_num'         : dsigma_num,
                         'dsigma_num_cross'   : dsigma_num_cross,
-                        'dsigmaalt_cross'    : dsigmaalt_cross, 
-                        'dsigmaalt_num'      : dsigmaalt_num,
-                        'dsigmaalt_num_cross': dsigmaalt_num_cross,
+                        # 'dsigmaalt_cross'    : dsigmaalt_cross, 
+                        # 'dsigmaalt_num'      : dsigmaalt_num,
+                        # 'dsigmaalt_num_cross': dsigmaalt_num_cross,
                         'denom'              : denom, 
                     }).to_csv( f"{inputs[ 'files' ][ 'output' ]}.{rank:03d}", # output filename (shuld be `i` not rank, otherwise, rewritten at `size`)
                             index = False,                 # do not write the indices to the file
