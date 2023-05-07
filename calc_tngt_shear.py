@@ -258,7 +258,8 @@ def calculate_dsigma_increments_vector_l(src, lenses, nnid, binedges, z_diff = 0
     jkids = np.arange( njack ) # jackknife indices
     for l in tqdm( range( lenses.shape[0] ) ):
         (
-            num_tan_s, num_crs_s, den_all_s, num_tan_alt_s, num_crs_alt_s, npairs_s
+            # num_tan_s, num_crs_s, den_all_s, num_tan_alt_s, num_crs_alt_s, npairs_s
+            num_tan_s, num_crs_s, den_all_s, npairs_s
         ) = _calaculate_for_lens( ra[l], dec[l], z[l], const[l], cdist[l], nnid[l] )
 
         # in jackknife sampling, add the weights to all patches, except its patch
