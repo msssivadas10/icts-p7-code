@@ -1,5 +1,3 @@
-#!/usr/bin/python3
-
 # Analytical/Numerical $\Delta\Sigma(R)$ model & MCMC
 # Since SciServer is on Python 3.8 in "SciServer Essentials 2.0",
 # need to import typing from __future__ for type hints like list[int], etc., uncomment the next line before running it there
@@ -14,7 +12,7 @@ from numpy.typing import ArrayLike  # only
 
 import emcee
 from schwimmbad import MPIPool
-import time
+# import time
 
 import astropy.cosmology as ac
 import astropy.constants as const
@@ -27,6 +25,8 @@ import pandas as pd
 # -----------------------------------------------------------------
 # -----------------------------------------------------------------
 # -----------------------------------------------------------------
+
+cosmo = ac.FlatLambdaCDM(H0=70, Om0=0.3, Tcmb0=2.725)
 
 
 def get_data(fname: str = "Dsigma_redmagic_0.01.dat"):
@@ -135,8 +135,11 @@ def lnprob_dk14(var: Union[tuple, list, ArrayLike], r_data: ArrayLike, data: Arr
     C3 = (5 >= r_t > 0.1)
     C4 = (5 >= r_s > 0.1)
     C5 = (10 >= s_e >= 1)
+    C6 = (alpha > 0)
+    C7 = (beta > 0)
+    C8 = (gamma > 0)
 
-    if not (C1 & C2 & C3 & C4 & C5):
+    if not (C1 & C2 & C3 & C4 & C5 & C6 & C7 & C8):
         return -np.inf
 
     logPalpha = -(alpha - np.exp(0.19)) / (2 * (0.6**2))
@@ -148,10 +151,10 @@ def lnprob_dk14(var: Union[tuple, list, ArrayLike], r_data: ArrayLike, data: Arr
 
     lnlike = -((data - dsd).T @  inv_cov @ (data - dsd))
     lnpost = lnlike + lnprior
-    
+
     if np.isnan(lnpost):
         return -np.inf
-        
+
     return lnpost
 
 # -----------------------------------------------------------------
@@ -223,9 +226,21 @@ def main(fname: str = None):
 
     lnprob = lnprob_dk14    # callable
     # initiate the random walkers
-    nwalkers, ndim = 16, 8
-    pos = args_for_sigma_rdata[:-1] + 1e-2 * np.random.randn(nwalkers, ndim)
     # ------------------------------------------------------
+
+    # -----------------------------------------------------------------------------------
+    # -----------------------------------------------------------------------------------
+    nwalkers, ndim = 64, 8
+    pos = args_for_sigma_rdata[:-1] + 1e-2 * np.random.randn(nwalkers, ndim)
+
+    fname = "sampler_dk14.h5"  # add NUMBER of ITERATIONS in the NAME if needed
+    backend = emcee.backends.HDFBackend(fname)
+    # bdtype = [("model", ArrayLike),] # for blobs
+
+    Iterations = 50_000  # SET THE NUMBER OF ITERATIONS HERE
+    # -----------------------------------------------------------------------------------
+    # -----------------------------------------------------------------------------------
+
     # run the chain
     with MPIPool() as pool:
         if not pool.is_master():
@@ -236,18 +251,26 @@ def main(fname: str = None):
                                         lnprob,
                                         args=(R_bins,
                                               data,
-                                              inv_cov))
-        sampler.run_mcmc(pos, 10, progress=True)
+                                              inv_cov),
+                                        backend=backend,
+                                        # blobs_dtype=bdtype, # for blobs
+                                        )
+        sampler.run_mcmc(pos, Iterations, progress=True)
 
-    # # if MPI is not working
+    # IF MPI IS NOT WORKING
+    # fname = "sampler_dk14.h5"  # add number of iterations if needed
+    # bkend = emcee.backends.HDFBackend(fname)
+    # bdtype = [("model", ArrayLike),]
     # sampler = emcee.EnsembleSampler(nwalkers, ndim,
-    #                                     lnprob,
-    #                                     args=(R_bins,
-        #   data,
-        #   inv_cov))
-    # sampler.run_mcmc(pos, 10, progress=True)
+    #                                 lnprob,
+    #                                 args=(R_bins,
+    #                                       data,
+    #                                       inv_cov),
+    #                                 backend=bkend,
+    #                                 blobs_dtype=bdtype)
+    # sampler.run_mcmc(pos, Iterations, progress=True)
 
-    return sampler
+    # return sampler
 ################################################################
 
 
