@@ -269,7 +269,7 @@ def calculate_dsigma_increments_vector_l(src, lenses, nnid, binedges, z_diff = 0
 
         if not len( ra_s ):
             nbins = len( binedges ) - 1
-            return np.zeros( nbins ), np.zeros( nbins ), np.zeros( nbins ), np.zeros( nbins ), np.zeros( nbins ), np.zeros( nbins )
+            return np.zeros( nbins ), np.zeros( nbins ), np.zeros( nbins ), np.zeros( nbins )#, np.zeros( nbins ), np.zeros( nbins )
         
         theta = get_distance( ra_l, dec_l, ra_s, dec_s ) # angular distance in between in radian
         rad_l   = theta * cdist_l                        # radial distance in Mpc
