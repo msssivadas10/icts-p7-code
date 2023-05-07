@@ -191,14 +191,15 @@ def run_pipeline(config_fname):
         sys.stderr.write(f"Rank({rank}): Calculating increments...\n")
         __t0 = time.time()
         #delta_num, delta_num_cross, delta_den = calculate_dsigma_increments( src_i, lenses, nnid, dist, r_edges )
-        delta_num, delta_num_cross, delta_den, deltaalt_num, deltaalt_num_cross, delta_npairs = calculate_dsigma_increments_vector_l( src_i, lenses, nnid, r_edges, z_diff )
+        # delta_num, delta_num_cross, delta_den, deltaalt_num, deltaalt_num_cross, delta_npairs = calculate_dsigma_increments_vector_l( src_i, lenses, nnid, r_edges, z_diff )
+        delta_num, delta_num_cross, delta_den, delta_npairs = calculate_dsigma_increments_vector_l( src_i, lenses, nnid, r_edges, z_diff )
         sys.stderr.write(f"Completed in {time.time() - __t0:,} sec\n")
         
         dsigma_num          = dsigma_num + delta_num
         dsigma_num_cross    = dsigma_num_cross + delta_num_cross
         denom               = denom + delta_den
-        dsigmaalt_num       = dsigmaalt_num + deltaalt_num
-        dsigmaalt_num_cross = dsigmaalt_num_cross + deltaalt_num_cross
+        # dsigmaalt_num       = dsigmaalt_num + deltaalt_num
+        # dsigmaalt_num_cross = dsigmaalt_num_cross + deltaalt_num_cross
 
         num_pairs += delta_npairs
     
@@ -222,9 +223,9 @@ def run_pipeline(config_fname):
                         'dsigma_cross': dsigma_cross, 
                         'dsigma_num' : dsigma_num,
                         'dsigma_num_cross': dsigma_num_cross,
-                        'dsigmaalt_cross': dsigmaalt_cross, 
-                        'dsigmaalt_num' : dsigmaalt_num,
-                        'dsigmaalt_num_cross': dsigmaalt_num_cross,
+                        # 'dsigmaalt_cross': dsigmaalt_cross, 
+                        # 'dsigmaalt_num' : dsigmaalt_num,
+                        # 'dsigmaalt_num_cross': dsigmaalt_num_cross,
                         'denom': denom, 
                     }).to_csv( f"{inputs[ 'files' ][ 'output' ]}.{rank:03d}", # output filename
                             index = False,                 # do not write the indices to the file

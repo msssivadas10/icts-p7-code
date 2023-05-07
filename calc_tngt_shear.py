@@ -198,27 +198,28 @@ def calculate_dsigma_increments_vector_l(src, lenses, nnid, binedges, z_diff = 0
         f1 = w_s * const_l * ( 1. - cdist_l / cdist_mean_s ) * R_s # a factor appearing in multiple times 
         f2 = const_l * ( 1. - cdist_l / cdist_mc_s ) * R_s         # a factor apperaing in denominator
 
-        e_tan = -e1_s * cos_2p2 - e2_s * sin_2p2 # tangential ellipsicity
-        e_crs =  e1_s * sin_2p2 - e2_s * cos_2p2 # cross direction ellipsicity
+        e_tan = -e1_s * cos_2p2 + e2_s * sin_2p2 # tangential ellipsicity
+        e_crs =  e1_s * sin_2p2 + e2_s * cos_2p2 # cross direction ellipsicity
 
         # NOTE: alternative version with sign of e2 reversed
-        e_tan_alt = -e1_s * cos_2p2 + e2_s * sin_2p2 # tangential ellipsicity
-        e_crs_alt =  e1_s * sin_2p2 + e2_s * cos_2p2 # cross direction ellipsicity
+        # e_tan_alt = -e1_s * cos_2p2 - e2_s * sin_2p2 # tangential ellipsicity
+        # e_crs_alt =  e1_s * sin_2p2 - e2_s * cos_2p2 # cross direction ellipsicity
 
         # using binned_statistics to bin the values with increments as weights
         # weights = 
         bstats = binned_statistic( rad_l, 
                                    values = [ f1 * e_tan,              # numerator for tangential part
                                               f1 * e_crs,              # numerator for cross part
-                                              f1 * e_tan_alt,          # numerator for tangential part
-                                              f1 * e_crs_alt,          # numerator for cross part
+                                            #   f1 * e_tan_alt,          # numerator for tangential part
+                                            #   f1 * e_crs_alt,          # numerator for cross part
                                               f1 * f2,                 # denominator for both part
                                               np.ones( len( rad_l ) ), # pair counting
                                             ],
                                    bins = binedges,
                                    statistic = 'sum',
                             )
-        num_tan, num_crs, num_tan_alt, num_crs_alt, den_all, npairs = bstats.statistic
+        # num_tan, num_crs, num_tan_alt, num_crs_alt, den_all, npairs = bstats.statistic
+        num_tan, num_crs, den_all, npairs = bstats.statistic
 
         # bstats1 = binned_statistic_2d( rad_l, 
         #                              jack_idx_l,        # jacknife index of the patch                
@@ -237,7 +238,8 @@ def calculate_dsigma_increments_vector_l(src, lenses, nnid, binedges, z_diff = 0
         # num_crs_alt   = num_crs_alt - num_crs_alt1     
         # npairs        = npairs      - npairs1      
         
-        return num_tan, num_crs, den_all, num_tan_alt, num_crs_alt, npairs
+        # return num_tan, num_crs, den_all, num_tan_alt, num_crs_alt, npairs
+        return num_tan, num_crs, den_all, npairs
     
     # calculate the values for all sources
     ra, dec, z, const, cdist, jkid = lenses[['ra', 'dec', 'zredmagic', 'const', 'cdist', 'jacknife_idx']].to_numpy().T
@@ -248,8 +250,8 @@ def calculate_dsigma_increments_vector_l(src, lenses, nnid, binedges, z_diff = 0
     nbins = len( binedges ) - 1
     njack = max( lenses['jacknife_idx'] ) + 1 # no. jaknife patches, assuming index start from 0
     (
-        num_tan, num_crs, den_all, num_tan_alt, num_crs_alt
-    )      = np.zeros( nbins, njack ), np.zeros( nbins, njack ), np.zeros( nbins, njack ), np.zeros( nbins, njack ), np.zeros( nbins, njack )
+        num_tan, num_crs, den_all#, num_tan_alt, num_crs_alt
+    )      = np.zeros( nbins, njack ), np.zeros( nbins, njack ), np.zeros( nbins, njack )#, np.zeros( nbins, njack ), np.zeros( nbins, njack )
     npairs = np.zeros( nbins, njack )
 
 
@@ -264,12 +266,13 @@ def calculate_dsigma_increments_vector_l(src, lenses, nnid, binedges, z_diff = 0
 
         num_tan[ mask ]     += num_tan_s[:]
         num_crs[ mask ]     += num_crs_s[:]
-        num_tan_alt[ mask ] += num_tan_alt_s[:]
-        num_crs_alt[ mask ] += num_crs_alt_s[:]
+        # num_tan_alt[ mask ] += num_tan_alt_s[:]
+        # num_crs_alt[ mask ] += num_crs_alt_s[:]
         den_all[ mask ]     += den_all_s[:]
         npairs[ mask ]      += npairs_s[:]
 
-    return num_tan, num_crs, den_all, num_tan_alt, num_crs_alt, npairs
+    # return num_tan, num_crs, den_all, num_tan_alt, num_crs_alt, npairs
+    return num_tan, num_crs, den_all, npairs
 
 
 
