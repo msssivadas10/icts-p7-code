@@ -218,7 +218,7 @@ def run_pipeline(config_fname):
         pd.DataFrame(
                         { 'r_center'   : 0.5*(r_edges[1:] + r_edges[:-1]), # bin centers (linear)
                         'dsigma'     : dsigma,
-                        'dsigmaalt'     : dsigmaalt,
+                        # 'dsigmaalt'     : dsigmaalt,
                         'num_pairs'    : num_pairs,
                         'dsigma_cross': dsigma_cross, 
                         'dsigma_num' : dsigma_num,
