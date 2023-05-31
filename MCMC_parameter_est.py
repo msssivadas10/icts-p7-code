@@ -8,7 +8,9 @@
 import sys
 from typing import Union
 import numpy as np
-from numpy.typing import ArrayLike  # only
+import pandas as pd
+from numpy.typing import ArrayLike
+import yaml
 
 import emcee
 from schwimmbad import MPIPool
@@ -21,7 +23,6 @@ import astropy.units as cu
 from profiles.numerical_dk import deltasigma_dk14_direct
 from profiles.analytic_nfw import delta_surface_density
 
-import pandas as pd
 # -----------------------------------------------------------------
 # -----------------------------------------------------------------
 # -----------------------------------------------------------------
@@ -136,20 +137,20 @@ def lnprob_dk14(var: Union[tuple, list, ArrayLike], r_data: ArrayLike, data: Arr
     C4 = (5 >= r_s > 0.1)
     C5 = (10 >= s_e >= 1)
     C6 = (alpha > 0)
-    C7 = (beta > 0)
+    C7 = (beta  > 0)
     C8 = (gamma > 0)
 
     if not (C1 & C2 & C3 & C4 & C5 & C6 & C7 & C8):
         return -np.inf
 
-    logPalpha = -(alpha - np.exp(0.19)) / (2 * (0.6**2))
-    logPbeta = -(beta - np.exp(4.0)) / (2 * (0.2**2))
-    logPgamma = -(gamma - np.exp(6.0)) / (2 * (0.2**2))
+    logPalpha = -(np.log(alpha) - np.log(0.19)) / (2 * (0.6**2))
+    logPbeta = -(np.log(beta) - np.log(4.0)) / (2 * (0.2**2))
+    logPgamma = -(np.log(gamma) - np.log(6.0)) / (2 * (0.2**2))
     lnprior = logPalpha + logPbeta + logPgamma
 
     dsd = deltasigma_dk14_direct(*var, r_data)
 
-    lnlike = -((data - dsd).T @  inv_cov @ (data - dsd))
+    lnlike = -((data - dsd).T @ inv_cov @ (data - dsd))
     lnpost = lnlike + lnprior
 
     if np.isnan(lnpost):
@@ -158,8 +159,6 @@ def lnprob_dk14(var: Union[tuple, list, ArrayLike], r_data: ArrayLike, data: Arr
     return lnpost
 
 # -----------------------------------------------------------------
-
-
 def mu(c200):
     return np.log(1 + c200) - c200/(1+c200)
 
@@ -206,9 +205,15 @@ def lnprob_nfwa(var, r_data, data, inv_cov):
 #########################################################
 
 
-def main(fname: str = None):
+def main(data_fname: str = "Dsigma_redmagic_0.01.dat"):
 
-    cosmo = ac.FlatLambdaCDM(H0=70, Om0=0.3, Tcmb0=2.725)
+    config_fname = 'config.yml'
+    with open( config_fname, 'r' ) as file:
+        inputs = yaml.safe_load( file )
+    
+    cosmo = ac.FlatLambdaCDM( H0  = inputs[ 'cosmology' ][ 'H0' ], 
+                    Om0 = inputs[ 'cosmology' ][ 'OmegaMatter' ] 
+                    ) # defaults: Tcmb = 0K, Ob0 = None
 
     # data = np.load("DeltaSigma_Firstrun.npz")['DeltaSigma']
     # R_bins = np.load("DeltaSigma_Firstrun.npz")['R_bins']
@@ -216,7 +221,7 @@ def main(fname: str = None):
     # # r_data, r_s, rho_s, data = random_dk14_data()
     # cov = np.load("DeltaSigma_Firstrun.npz")['cov']
 
-    r_sigma_data, cov, corr = get_data(fname="Dsigma_redmagic_0.01.dat")
+    r_sigma_data, cov, corr = get_data(data_fname=data_fname)
     R_bins = r_sigma_data['R_center'].to_numpy()
     data = r_sigma_data['DeltaSigma'].to_numpy()
     inv_cov = np.linalg.inv(cov)
