@@ -16,19 +16,19 @@ def getregions(regfile,ra,dec):
     ra = (ra+90.)%360.0
     jackreg = np.zeros(ra.size, dtype=int)
     # Read the file
-    listramin,listramax,listdecmin,listdecmax=np.loadtxt(regfile,unpack=1);
+    listramin,listramax,listdecmin,listdecmax=np.loadtxt(regfile,unpack=1)
     for i in tqdm(range(ra.size)):
         for j in range(listramin.size):
             if(ra[i]<listramin[j]):
-                continue;
+                continue
             if(ra[i]>=listramax[j]):
-                continue;
+                continue
             if(dec[i]<listdecmin[j]):
-                continue;
+                continue
             if(dec[i]>=listdecmax[j]):
-                continue;
-            jackreg[i]=j;
-            break;
+                continue
+            jackreg[i]=j
+            break
     return jackreg
 
 if __name__ == "__main__":
