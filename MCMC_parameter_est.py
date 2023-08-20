@@ -1,6 +1,7 @@
 # Analytical/Numerical $\Delta\Sigma(R)$ model & MCMC
 # Since SciServer is on Python 3.8 in "SciServer Essentials 2.0",
-# need to import typing from __future__ for type hints like list[int], etc., uncomment the next line before running it there
+# need to import typing from __future__ for type hints like list[int], etc.,
+# uncomment the next line before running it there
 # Note that type hints may not work for Python < 3.7
 # For Python > 3.9 importing from __future__ not needed
 # from __future__ import annotations
@@ -30,7 +31,7 @@ from profiles.analytic_nfw import delta_surface_density
 cosmo = ac.FlatLambdaCDM(H0=70, Om0=0.3, Tcmb0=2.725)
 
 
-def get_data(fname: str = "Dsigma_redmagic_0.01.dat"):
+def get_data(fname: str):
     """
     Takes the file with 'DeltaSigma', 'R_center', 'Jackknife_region'
     and 
@@ -53,8 +54,9 @@ def get_data(fname: str = "Dsigma_redmagic_0.01.dat"):
 
     # Split the data into Jackknife regions using Pandas
     n_jackknife = len(data["Jackknife_region"].unique())
-    data_list_each_jn = [data[data['Jackknife_region'] == i]
-                         for i in range(n_jackknife)]
+    data_list_each_jn = [
+        data[data['Jackknife_region'] == i] for i in range(n_jackknife)
+    ]
 
     # Initialize the covariance matrix using NumPy
     cov = np.zeros((n_pts_per_jn, n_pts_per_jn))
@@ -107,7 +109,12 @@ def initial_args_for_dk14(r_data: ArrayLike):
 # Posterior distribution
 
 
-def lnprob_dk14(var: Union[tuple, list, ArrayLike], r_data: ArrayLike, data: ArrayLike, inv_cov: ArrayLike):
+def lnprob_dk14(
+        var: Union[tuple, list, ArrayLike],
+        r_data: ArrayLike,
+        data: ArrayLike,
+        inv_cov: ArrayLike
+):
     """
     Compute the log posterior probability for the DK14 model.
 
@@ -137,7 +144,7 @@ def lnprob_dk14(var: Union[tuple, list, ArrayLike], r_data: ArrayLike, data: Arr
     C4 = (5 >= r_s > 0.1)
     C5 = (10 >= s_e >= 1)
     C6 = (alpha > 0)
-    C7 = (beta  > 0)
+    C7 = (beta > 0)
     C8 = (gamma > 0)
 
     if not (C1 & C2 & C3 & C4 & C5 & C6 & C7 & C8):
@@ -159,6 +166,8 @@ def lnprob_dk14(var: Union[tuple, list, ArrayLike], r_data: ArrayLike, data: Arr
     return lnpost
 
 # -----------------------------------------------------------------
+
+
 def mu(c200):
     return np.log(1 + c200) - c200/(1+c200)
 
@@ -205,21 +214,7 @@ def lnprob_nfwa(var, r_data, data, inv_cov):
 #########################################################
 
 
-def main(data_fname: str = "Dsigma_redmagic_0.01.dat"):
-
-    config_fname = 'config.yml'
-    with open( config_fname, 'r' ) as file:
-        inputs = yaml.safe_load( file )
-    
-    cosmo = ac.FlatLambdaCDM( H0  = inputs[ 'cosmology' ][ 'H0' ], 
-                    Om0 = inputs[ 'cosmology' ][ 'OmegaMatter' ] 
-                    ) # defaults: Tcmb = 0K, Ob0 = None
-
-    # data = np.load("DeltaSigma_Firstrun.npz")['DeltaSigma']
-    # R_bins = np.load("DeltaSigma_Firstrun.npz")['R_bins']
-
-    # # r_data, r_s, rho_s, data = random_dk14_data()
-    # cov = np.load("DeltaSigma_Firstrun.npz")['cov']
+def main(data_fname: str):
 
     r_sigma_data, cov, corr = get_data(data_fname=data_fname)
     R_bins = r_sigma_data['R_center'].to_numpy()
@@ -233,8 +228,8 @@ def main(data_fname: str = "Dsigma_redmagic_0.01.dat"):
     # initiate the random walkers
     # ------------------------------------------------------
 
-    # -----------------------------------------------------------------------------------
-    # -----------------------------------------------------------------------------------
+    # ----------------------------------------------------------
+    # ----------------------------------------------------------
     nwalkers, ndim = 64, 8
     pos = args_for_sigma_rdata[:-1] + 1e-2 * np.random.randn(nwalkers, ndim)
 
@@ -243,8 +238,8 @@ def main(data_fname: str = "Dsigma_redmagic_0.01.dat"):
     # bdtype = [("model", ArrayLike),] # for blobs
 
     Iterations = 50_000  # SET THE NUMBER OF ITERATIONS HERE
-    # -----------------------------------------------------------------------------------
-    # -----------------------------------------------------------------------------------
+    # ----------------------------------------------------------
+    # ----------------------------------------------------------
 
     # run the chain
     with MPIPool() as pool:
@@ -252,14 +247,17 @@ def main(data_fname: str = "Dsigma_redmagic_0.01.dat"):
             pool.wait()
             sys.exit(0)
 
-        sampler = emcee.EnsembleSampler(nwalkers, ndim,
-                                        lnprob,
-                                        args=(R_bins,
-                                              data,
-                                              inv_cov),
-                                        backend=backend,
-                                        # blobs_dtype=bdtype, # for blobs
-                                        )
+        sampler = emcee.EnsembleSampler(
+            nwalkers, ndim,
+            lnprob,
+            args=(
+                R_bins,
+                data,
+                inv_cov
+            ),
+            backend=backend,
+            # blobs_dtype=bdtype, # for blobs
+        )
         sampler.run_mcmc(pos, Iterations, progress=True)
 
     # IF MPI IS NOT WORKING
@@ -280,4 +278,9 @@ def main(data_fname: str = "Dsigma_redmagic_0.01.dat"):
 
 
 if __name__ == '__main__':
-    main()
+
+    config_fname = 'config.yml'
+    with open(config_fname, 'r') as file:
+        inputs = yaml.safe_load(file)
+
+    main(data_fname=inputs["files"]["output"])

@@ -2,25 +2,25 @@
 
 # specifies various filenames
 files:
-  lens_file: /home/idies/workspace/Temporary/surhudm/scratch/DES/y3a2_gold2.2.1_redmagic_highdens.fits                 # lens objects
-  src_shape_file: /home/idies/workspace/Temporary/surhudm/scratch/DES/DESY3_metacal_v03-004.h5       # source shape catalog
-  src_redshift_file: /home/idies/workspace/Temporary/surhudm/scratch/DES/DESY3_GOLD_2_2.1_DNF.h5      # source redshift catalog
-  output: dsigma.dat # output file
+  lens_file: /home/idies/workspace/Temporary/surhudm/scratch/DES/y3a2_gold2.2.1_redmagic_highdens.fits # lens objects
+  src_shape_file: /home/idies/workspace/Temporary/surhudm/scratch/DES/DESY3_metacal_v03-004.h5 # source shape catalog
+  src_redshift_file: /home/idies/workspace/Temporary/surhudm/scratch/DES/DESY3_GOLD_2_2.1_DNF.h5 # source redshift catalog
+  output: Dsigma_redmagic_0.01.dat # output file
   jackknife: /home/idies/workspace/Temporary/surhudm/scratch/DES/Jackknife.dat
 
 # specify the cosmology model parameters (flat Lambda-cdm model)
 cosmology:
- name:        FlatLambdaCDM
- OmegaMatter: 0.3
- H0:          70.
+  name: FlatLambdaCDM
+  OmegaMatter: 0.3
+  H0: 70.
 
 # other parameters
-r_min:      0.1 
-r_max:      20.
-r_bins:     21   # number of bins
-z_min:      0.2  # redshift minimum
-z_max:      0.7  # redshift maximum
+r_min: 0.1
+r_max: 20.
+r_bins: 21 # number of bins
+z_min: 0.2 # redshift minimum
+z_max: 0.7 # redshift maximum
 z_bins_intrp: 1001 # number of redshift bins for interpolation
-z_bins_selec: 5    # number of redshift bins for lens selection
+z_bins_selec: 5 # number of redshift bins for lens selection
 frac_bright: 0.01
 chunk_size: 1000000 # size of the source data chunks
