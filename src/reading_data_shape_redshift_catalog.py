@@ -54,6 +54,7 @@ def reading_lens_params(
     # selecting a fraction
     zdiff = (z_max - z_min)/zbins
     idx = data["ra"] != data["ra"]
+
     for ii in range(zbins):
         iidx = (data["zredmagic"] > z_min+ii *
                 zdiff) & (data["zredmagic"] <= z_min+(ii+1)*zdiff)
@@ -80,15 +81,22 @@ def reading_data_sources(shape_file_data, redshift_file_data, start, end):
     end: 
     """
     # The parameters needed to computing differential surface density
-    shape_params = ['coadd_object_id', 'ra', 'dec', 'e_1', 'e_2',
-                    'snr', 'weight', 'flags', 'size_ratio', 'T',
-                    'R11', 'R12', 'R21', 'R22']
+    shape_params = [
+        'coadd_object_id', 'ra', 'dec', 'e_1', 'e_2',
+        'snr', 'weight', 'flags', 'size_ratio', 'T',
+        'R11', 'R12', 'R21', 'R22'
+    ]
     redshift_params = ['coadd_object_id', 'zmc_sof', 'zmean_sof']
 
     data1 = reading_shape_data(
-        file_data=shape_file_data, params=shape_params, start=start, end=end)
+        file_data=shape_file_data, params=shape_params,
+        start=start, end=end
+    )
     data2 = reading_shape_data(
-        file_data=redshift_file_data, params=redshift_params, start=start, end=end)
+        file_data=redshift_file_data, params=redshift_params,
+        start=start, end=end
+    )
+
     data1["zmc_sof"] = data2["zmc_sof"]
     data1["zmean_sof"] = data2["zmean_sof"]
 
@@ -100,9 +108,13 @@ def reading_data_sources(shape_file_data, redshift_file_data, start, end):
     size_ratio = 0.5
     T = 10
 
-    idx = np.array(data["flags"] == flags) & np.array(data["snr"] > snr_th_lower) & \
-        np.array(data["snr"] < snr_th_upper) & np.array(data["size_ratio"] > size_ratio) & \
+    idx = (
+        np.array(data["flags"] == flags) &
+        np.array(data["snr"] > snr_th_lower) &
+        np.array(data["snr"] < snr_th_upper) &
+        np.array(data["size_ratio"] > size_ratio) &
         np.array(data["T"] < T)
+    )
 
     data_selected = dict()
     for key in list(data.keys()):

@@ -5,25 +5,29 @@
 # code skelton: almost complete?
 #
 
-import numpy as np
-import pandas as pd
 import sys
 import time
+
 import h5py  # to read hdf5 files
+
+# from os import read
+import numpy as np
+import pandas as pd
 import yaml  # to parse yaml config files
 from astropy.cosmology import FlatLambdaCDM  # cosmology model
-from scipy.interpolate import CubicSpline   # for interpolations
-from kdtreecode import BallTree             # for nearest neighbours
-# for loading the catalogs
-from reading_data_shape_redshift_catalog import (
-    reading_lens_params,
-    reading_data_sources
-)
+from scipy.interpolate import CubicSpline  # for interpolations
+
 # for calculating delta-sigma
-from calc_tngt_shear import (
+from src.calc_tngt_shear import (  # calculate_dsigma_increments,
+    calculate_dsigma_increments_vector,
     get_lens_constants,
-    # calculate_dsigma_increments,
-    calculate_dsigma_increments_vector
+)
+from src.kdtreecode import BallTree  # for nearest neighbours
+
+# for loading the catalogs
+from src.reading_data_shape_redshift_catalog import (
+    reading_data_sources,
+    reading_lens_params,
 )
 
 try:
@@ -35,8 +39,13 @@ except ImportError:
 # input: config filename
 
 
-def run_pipeline(config_fname):
+def read_config_file(config_fname):
+    with open(config_fname, "r") as file:
+        config = yaml.safe_load(file)
+    return config
 
+
+def run_pipeline(config_fname):
     try:
         comm = MPI.COMM_WORLD
         rank = comm.rank
@@ -49,34 +58,34 @@ def run_pipeline(config_fname):
     # reading the config file
     #
     sys.stderr.write(f"Rank({rank}): Reading the config file...\n")
-    with open(config_fname, 'r') as file:
-        inputs = yaml.safe_load(file)
-
+    config = read_config_file(config_fname)
     #
     # creating a flat-lcdm model using the given cosmology parameters.
     #
-    cm = FlatLambdaCDM(H0=inputs['cosmology']['H0'],
-                       Om0=inputs['cosmology']['OmegaMatter']
-                       )  # defaults: Tcmb = 0K, Ob0 = None
+    cosmo = FlatLambdaCDM(
+        H0=config["cosmology"]["H0"], Om0=config["cosmology"]["OmegaMatter"]
+    )  # defaults: Tcmb = 0K, Ob0 = None
 
     # redshift range
-    z_min = inputs['z_min']
-    z_max = inputs['z_max']
+    z_min = config["z_min"]
+    z_max = config["z_max"]
 
     #
     # calculate and interpolate the comoving distances for future use
     #
-    z = np.linspace(max(z_min - 0.1, 0.), min(z_max +
-                    0.1, 10.), inputs['z_bins_intrp'])
-    xz = cm.comoving_distance(z)
+    z = np.linspace(
+        max(z_min - 0.1, 0.0), min(z_max + 0.1, 10.0), config["z_bins_intrp"]
+    )
+    xz = cosmo.comoving_distance(z)
 
     # spline object for comoving distance calculation
-    comoving_distance = CubicSpline(z, xz)  # can be accesses like a function
+    # can be accessed like a function
+    comoving_distance = CubicSpline(z, xz)
 
     # parameters for binning neighbour distance
-    r_min = inputs['r_min']  # lower distance bound
-    r_max = inputs['r_max']  # upper distance bound
-    r_bins = inputs['r_bins']  # number of bins
+    r_min = config["r_min"]  # lower distance bound
+    r_max = config["r_max"]  # upper distance bound
+    r_bins = config["r_bins"]  # number of bins
 
     #
     # find the angular seperation for nn search
@@ -89,52 +98,58 @@ def run_pipeline(config_fname):
     # read files: lenses catalog -> ra, dec, redshift
     #
     sys.stderr.write(f"Rank({rank}): Reading the lens catalog...\n")
-    lens_fname = inputs['files']['lens_file']  # lenses filename
+    lens_fname = config["files"]["lens_file"]  # lenses filename
 
     # read jackknife indices of the lenses
-    jackknife_idx = pd.read_csv(
-        inputs['files']['jackknife']
-    )["jack_idx"].values
+    jackknife_idx = pd.read_csv(config["files"]["jackknife"])[
+        "jack_idx"].values
 
     # read the lens data into a pandas.DataFrame object, having features including
     # coadd_object_id, ra, dec, zredmagic and lum_z
     # NOTE: ra and dec must be in radians
-    lenses = pd.DataFrame(reading_lens_params(
-        lens_fname,
-        jackknife_idx,
-        z_min, z_max,
-        inputs['frac_bright'], inputs['z_bins_selec']
-    ))
+    lenses = pd.DataFrame(
+        reading_lens_params(
+            lens_fname,
+            jackknife_idx,
+            z_min,
+            z_max,
+            config["frac_bright"],
+            config["z_bins_selec"],
+        )
+    )
     # lenses = lenses.T.dropna().T # dropping the nan
 
     # precalculate the lens constants and comoving dist
-    lconst, lcmdist = get_lens_constants(lenses, comoving_distance)
-    lenses['const'] = lconst  # lens constants
-    lenses['cdist'] = lcmdist  # comoving distances to the lenses
+    # lens constants & # comoving distances to the lenses
+    lenses["const"], lenses["cdist"] = get_lens_constants(
+        lenses, comoving_distance
+    )
 
     #
     # create a ball-tree using the lens positions for efficent neighbor search
     #
     sys.stderr.write(f"Rank({rank}): Creating the lens tree...\n")
-    lens_bt = BallTree(data=lenses[['dec', 'ra']].to_numpy(),
-                       # leaf_size = 20,
-                       # metric    = 'haversine' # metric on a spherical surface
-                       )
-    # lens_bt = BallTree( lenses[['dec', 'ra']].to_numpy(),
-    #                )
+    lens_bt = BallTree(
+        data=lenses[["dec", "ra"]].to_numpy(),
+        # leaf_size = 20,
+        # metric    = 'haversine' # metric on a spherical surface
+    )
+    # lens_bt = BallTree(
+    #       lenses[['dec', 'ra']].to_numpy(),
+    # )
 
     #
     # read files: source catalog -> ra, dec, redshift etc
     #
     sys.stderr.write(f"Rank({rank}): Creating source file objects...\n")
     # source shape data
-    srcs_file = h5py.File(inputs['files']['src_shape_file'], 'r')
+    srcs_file = h5py.File(config["files"]["src_shape_file"], "r")
     srcz_file = h5py.File(
-        inputs['files']['src_redshift_file'], 'r')  # source redshifts
+        config["files"]["src_redshift_file"], "r")  # source redshifts
 
     # size of the sources
     src_size = srcs_file["catalog"]["unsheared"]["e_1"].shape[0]
-    chunk_size = inputs['chunk_size']   # size of each sub catalog
+    chunk_size = config["chunk_size"]  # size of each sub catalog
 
     #
     # read the catalogs and calculate the delta-sigma values
@@ -149,14 +164,14 @@ def run_pipeline(config_fname):
     num_pairs = np.zeros(r_bins - 1)
 
     # calculate the bin edges TODO
-    r_edges = np.logspace(np.log10(r_min), np.log10(
-        r_max), r_bins)  # log space bin edges
+    r_edges = np.logspace(
+        np.log10(r_min), np.log10(r_max), r_bins
+    )  # log space bin edges
 
     # nnDB   = [] # a database for the holding the source chunks and the neighbour data
     # dsigma = [] # to store the delta-sigma values (TODO: check this)
     sys.stderr.write(f"Rank({rank}): Starting mainloop...\n")
     for i in range(src_size // chunk_size + 1):
-
         if i % size != rank:
             continue
 
@@ -167,10 +182,11 @@ def run_pipeline(config_fname):
         src_i = pd.DataFrame(reading_data_sources(
             srcs_file, srcz_file, start, stop))
         src_i = src_i.T.dropna().T  # dropping the nan
-        src_i['cdist_mean'] = comoving_distance(
-            src_i['zmean_sof'])  # using mean redshift
-        src_i['cdist_mc'] = comoving_distance(
-            src_i['zmc_sof'])   # using mc redshift
+        src_i["cdist_mean"] = comoving_distance(
+            src_i["zmean_sof"]
+        )  # using mean redshift
+        src_i["cdist_mc"] = comoving_distance(
+            src_i["zmc_sof"])  # using mc redshift
 
         # find the nearest neighbours using the maximum radius
         sys.stderr.write(f"Rank({rank}): Searching for neighbours...\n")
@@ -180,7 +196,7 @@ def run_pipeline(config_fname):
         #                                   return_distance = True
         #                                )
 
-        nnid = lens_bt.query_radius(src_i[['dec', 'ra']].to_numpy(), theta_max)
+        nnid = lens_bt.query_radius(src_i[["dec", "ra"]].to_numpy(), theta_max)
         sys.stderr.write(
             f"Rank({rank}): Completed in {time.time() - __t0:,} sec\n")
 
@@ -191,10 +207,16 @@ def run_pipeline(config_fname):
         sys.stderr.write(f"Rank({rank}): Calculating increments...\n")
         __t0 = time.time()
 
-        delta_num, delta_num_cross, delta_den, deltaalt_num, \
-            deltaalt_num_cross, delta_npairs = calculate_dsigma_increments_vector(
-                src_i, lenses, nnid, r_edges
-            )  # vectorized
+        (
+            delta_num,
+            delta_num_cross,
+            delta_den,
+            deltaalt_num,
+            deltaalt_num_cross,
+            delta_npairs,
+        ) = calculate_dsigma_increments_vector(
+            src_i, lenses, nnid, r_edges
+        )  # vectorized
         sys.stderr.write(f"Completed in {time.time() - __t0:,} sec\n")
 
         dsigma_num = dsigma_num + delta_num
@@ -218,20 +240,24 @@ def run_pipeline(config_fname):
 
         sys.stderr.write(f"Rank({rank}): Writing the output file...\n")
         pd.DataFrame(
-            {'r_center': 0.5*(r_edges[1:] + r_edges[:-1]),  # bin centers (linear)
-             'dsigma': dsigma,
-             'dsigmaalt': dsigmaalt,
-             'num_pairs': num_pairs,
-             'dsigma_cross': dsigma_cross,
-             'dsigma_num': dsigma_num,
-             'dsigma_num_cross': dsigma_num_cross,
-             'dsigmaalt_cross': dsigmaalt_cross,
-             'dsigmaalt_num': dsigmaalt_num,
-             'dsigmaalt_num_cross': dsigmaalt_num_cross,
-             'denom': denom,
-             }).to_csv(f"{inputs[ 'files' ][ 'output' ]}.{rank:03d}",
-                       index=False,  # do not write the indices to the file
-                       )
+            {
+                # bin centers (linear)
+                "r_center": 0.5 * (r_edges[1:] + r_edges[:-1]),
+                "dsigma": dsigma,
+                "dsigmaalt": dsigmaalt,
+                "num_pairs": num_pairs,
+                "dsigma_cross": dsigma_cross,
+                "dsigma_num": dsigma_num,
+                "dsigma_num_cross": dsigma_num_cross,
+                "dsigmaalt_cross": dsigmaalt_cross,
+                "dsigmaalt_num": dsigmaalt_num,
+                "dsigmaalt_num_cross": dsigmaalt_num_cross,
+                "denom": denom,
+            }
+        ).to_csv(
+            f"{config[ 'files' ][ 'output' ]}.{rank:03d}",
+            index=False,  # do not write the indices to the file
+        )
 
         # break # for testing, stop after first iteration
     sys.stderr.write(f"Rank({rank}): End of mainloop...\n")
@@ -239,24 +265,22 @@ def run_pipeline(config_fname):
     sys.stderr.write(f"Rank({rank}): The end...\n")
     return
 
+
 #
 # main function: parse the arguments and run the pipline
 #
 
 
 def mainloop():
-
     import argparse
 
     # creating the argument parser
     parser = argparse.ArgumentParser(
-        description="Density profile calculations using weak lensing")
-    parser.add_argument('config',
-                        metavar='file',
-                        type=str,
-                        nargs='?',
-                        help='path to the configuration (yaml) file'
-                        )
+        description="Density profile calculations using weak lensing"
+    )
+    parser.add_argument(
+        "config", metavar="file", type=str, nargs="?", help="path to the yaml config"
+    )
 
     # parsing the arguments. if a correct path to a config file given, run the pipeline
     args = parser.parse_args()
@@ -266,5 +290,5 @@ def mainloop():
     return
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     mainloop()
