@@ -134,18 +134,15 @@ def run_pipeline(config_fname):
         # leaf_size = 20,
         # metric    = 'haversine' # metric on a spherical surface
     )
-    # lens_bt = BallTree(
-    #       lenses[['dec', 'ra']].to_numpy(),
-    # )
 
     #
     # read files: source catalog -> ra, dec, redshift etc
-    #
     sys.stderr.write(f"Rank({rank}): Creating source file objects...\n")
     # source shape data
     srcs_file = h5py.File(config["files"]["src_shape_file"], "r")
     srcz_file = h5py.File(
-        config["files"]["src_redshift_file"], "r")  # source redshifts
+        config["files"]["src_redshift_file"], "r"
+    )  # source redshifts
 
     # size of the sources
     src_size = srcs_file["catalog"]["unsheared"]["e_1"].shape[0]
@@ -259,7 +256,9 @@ def run_pipeline(config_fname):
             index=False,  # do not write the indices to the file
         )
 
-        # break # for testing, stop after first iteration
+    # ! REMOVE THIS FOR FULL LOOP
+    # break
+
     sys.stderr.write(f"Rank({rank}): End of mainloop...\n")
 
     sys.stderr.write(f"Rank({rank}): The end...\n")

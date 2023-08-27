@@ -7,6 +7,7 @@
 
 import sys
 import time
+from enum import Enum
 
 import h5py  # to read hdf5 files
 import numpy as np
@@ -18,18 +19,22 @@ from scipy.interpolate import CubicSpline  # for interpolations
 
 # for calculating delta-sigma
 from src.calc_tngt_shear import calculate_dsigma_increments, get_lens_constants
-
-# from sklearn.neighbors import BallTree      # for nearest neighbours
+# from sklearn.neighbors import BallTree
 from src.kdtreecode import BallTree  # for nearest neighbours
-
 # for loading the catalogs
 from src.reading_data_shape_redshift_catalog import (
     reading_data_sources,
-    reading_lens_params,
+    reading_lens_params
 )
 
 # define the function to run pipline.
 # input: config filename
+
+
+class MPITag(Enum):
+    NUM = 14
+    NUMCROSS = 15
+    DENOM = 16
 
 
 def run_pipeline(config_fname):
@@ -105,8 +110,6 @@ def run_pipeline(config_fname):
         # leaf_size = 20,
         # metric    = 'haversine' # metric on a spherical surface
     )
-    # lens_bt = BallTree( lenses[['dec', 'ra']].to_numpy(),
-    #                )
 
     #
     # read files: source catalog -> ra, dec, redshift etc
@@ -122,7 +125,7 @@ def run_pipeline(config_fname):
     chunk_size = inputs["chunk_size"]  # size of each sub catalog
 
     #
-    # dividing the jonb among the processes
+    # dividing the job among the processes
     #
     count = src_size // size
     rem = src_size % size
@@ -155,21 +158,24 @@ def run_pipeline(config_fname):
         stop = start + chunk_size
         sys.stderr.write(f"Loading sources from {start} to {stop}...\n")
         src_i = pd.DataFrame(reading_data_sources(
-            srcs_file, srcz_file, start, stop))
+            srcs_file, srcz_file, start, stop
+        ))
         src_i = src_i.dropna()  # dropping the nan
         src_i["cdist_mean"] = comoving_distance(
             src_i["zmean_sof"]
         )  # using mean redshift
         src_i["cdist_mc"] = comoving_distance(
-            src_i["zmc_sof"])  # using mc redshift
+            src_i["zmc_sof"]
+        )  # using mc redshift
 
         # find the nearest neighbours using the maximum radius
         sys.stderr.write("Searching for neighbours...\n")
         __t0 = time.time()
-        # nnid, dist = lens_bt.query_radius( src_i[['dec', 'ra']].to_numpy(),
-        #                                   theta_max,
-        #                                   return_distance = True
-        #                                )
+        # nnid, dist = lens_bt.query_radius(
+        #   src_i[['dec', 'ra']].to_numpy(),
+        #   theta_max,
+        #   return_distance = True
+        # )
 
         nnid = lens_bt.query_radius(src_i[["dec", "ra"]].to_numpy(), theta_max)
         sys.stderr.write(f"Completed in {time.time() - __t0:,} sec\n")
@@ -204,30 +210,31 @@ def run_pipeline(config_fname):
         dsigma_num_cross = dsigma_num_cross + delta_num_cross
         denom = denom + delta_den
 
-        break  # for testing, stop after first iteration
+        # ! REMOVE THIS FOR TESTING LOOP
+        # break  # for testing, stop after first iteration
 
     sys.stderr.write("End of mainloop...\n")
 
     #
-    # recive data from other processes and combine (provided using np.array)
+    # receive data from other processes and combine (provided using np.array)
     #
     if rank > 0:
         # send data from every other process, except 0
         # FIXME is the `tag` can be any id
-        comm.Send(dsigma_num, dest=0, tag=14)
-        comm.Send(dsigma_num_cross, dest=0, tag=15)
-        comm.Send(denom, dest=0, tag=16)
+        comm.Send(dsigma_num, dest=0, tag=MPITag.NUM)
+        comm.Send(dsigma_num_cross, dest=0, tag=MPITag.NUMCROSS)
+        comm.Send(denom, dest=0, tag=MPITag.DENOM)
     else:
-        # reciev from all others at 0
+        # recieve from all others at 0
         for __proc in range(1, size):
             _dsigma_num = np.empty(r_bins - 1)
-            comm.Recv(_dsigma_num, source=__proc, tag=14)
+            comm.Recv(_dsigma_num, source=__proc, tag=MPITag.NUM)
 
             _dsigma_num_cross = np.empty(r_bins - 1)
-            comm.Recv(_dsigma_num_cross, source=__proc, tag=15)
+            comm.Recv(_dsigma_num_cross, source=__proc, tag=MPITag.NUMCROSS)
 
             _denom = np.empty(r_bins - 1)
-            comm.Recv(_denom, source=__proc, tag=16)
+            comm.Recv(_denom, source=__proc, tag=MPITag.DENOM)
 
             dsigma_num = dsigma_num + _dsigma_num
             dsigma_num_cross = dsigma_num_cross + _dsigma_num_cross
@@ -254,7 +261,6 @@ def run_pipeline(config_fname):
         )
 
         sys.stderr.write("The end...\n")
-    return
 
 
 #
