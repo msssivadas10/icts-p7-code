@@ -7,7 +7,7 @@
 # from __future__ import annotations
 
 import sys
-from typing import Union
+from typing import Callable, Union
 
 import astropy.constants as const
 import astropy.cosmology as ac
@@ -223,7 +223,7 @@ def main(data_fname: str):
     # ------------------------------------------------------
     args_for_sigma_rdata = initial_args_for_dk14(R_bins)
 
-    lnprob = lnprob_dk14    # callable
+    lnprob: Callable = lnprob_dk14    # callable
     # initiate the random walkers
     # ------------------------------------------------------
 
@@ -253,7 +253,7 @@ def main(data_fname: str):
                 R_bins,
                 data,
                 inv_cov
-            ),
+            ),  # ! MAKE THESE VALUES GLOBAL TO SPEED UP THE SAMPLER
             backend=backend,
             pool=pool,
         )
