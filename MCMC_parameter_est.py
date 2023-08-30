@@ -8,21 +8,20 @@
 
 import sys
 from typing import Union
+
+import astropy.constants as const
+import astropy.cosmology as ac
+import astropy.units as cu
 import numpy as np
 import pandas as pd
-from numpy.typing import ArrayLike
 import yaml
+from emcee import EnsembleSampler
+from emcee.backends import HDFBackend
+from numpy.typing import NDArray
+from schwimmbad import MultiPool
 
-import emcee
-from schwimmbad import MPIPool
-# import time
-
-import astropy.cosmology as ac
-import astropy.constants as const
-import astropy.units as cu
-
-from profiles.numerical_dk import deltasigma_dk14_direct
 from profiles.analytic_nfw import delta_surface_density
+from profiles.numerical_dk import deltasigma_dk14_direct
 
 # -----------------------------------------------------------------
 # -----------------------------------------------------------------
@@ -91,7 +90,7 @@ def random_dk14_data():
     return r_data, r_s, rho_s, noise  # data
 
 
-def initial_args_for_dk14(r_data: ArrayLike):
+def initial_args_for_dk14(r_data: NDArray):
     args_for_sigma = [  # to initialize
         np.exp(1.1),
         np.exp(0.349),
@@ -110,10 +109,10 @@ def initial_args_for_dk14(r_data: ArrayLike):
 
 
 def lnprob_dk14(
-        var: Union[tuple, list, ArrayLike],
-        r_data: ArrayLike,
-        data: ArrayLike,
-        inv_cov: ArrayLike
+        var: Union[tuple, list, NDArray],
+        r_data: NDArray,
+        data: NDArray,
+        inv_cov: NDArray
 ):
     """
     Compute the log posterior probability for the DK14 model.
@@ -233,21 +232,21 @@ def main(data_fname: str):
     nwalkers, ndim = 64, 8
     pos = args_for_sigma_rdata[:-1] + 1e-2 * np.random.randn(nwalkers, ndim)
 
-    fname = "sampler_dk14.h5"  # add NUMBER of ITERATIONS in the NAME if needed
-    backend = emcee.backends.HDFBackend(fname)
-    # bdtype = [("model", ArrayLike),] # for blobs
+    iterations = 50_000  # SET THE NUMBER OF ITERATIONS HERE
 
-    Iterations = 50_000  # SET THE NUMBER OF ITERATIONS HERE
+    fname = "sampler_dk14.h5"  # add NUMBER of ITERATIONS in the NAME if needed
+    backend = HDFBackend(fname)
     # ----------------------------------------------------------
     # ----------------------------------------------------------
 
     # run the chain
-    with MPIPool() as pool:
+    with MultiPool() as pool:
         if not pool.is_master():
             pool.wait()
+            print("Not on the master process")
             sys.exit(0)
 
-        sampler = emcee.EnsembleSampler(
+        sampler = EnsembleSampler(
             nwalkers, ndim,
             lnprob,
             args=(
@@ -256,24 +255,10 @@ def main(data_fname: str):
                 inv_cov
             ),
             backend=backend,
-            # blobs_dtype=bdtype, # for blobs
+            pool=pool,
         )
-        sampler.run_mcmc(pos, Iterations, progress=True)
 
-    # IF MPI IS NOT WORKING
-    # fname = "sampler_dk14.h5"  # add number of iterations if needed
-    # bkend = emcee.backends.HDFBackend(fname)
-    # bdtype = [("model", ArrayLike),]
-    # sampler = emcee.EnsembleSampler(nwalkers, ndim,
-    #                                 lnprob,
-    #                                 args=(R_bins,
-    #                                       data,
-    #                                       inv_cov),
-    #                                 backend=bkend,
-    #                                 blobs_dtype=bdtype)
-    # sampler.run_mcmc(pos, Iterations, progress=True)
-
-    # return sampler
+        sampler.run_mcmc(pos, iterations, progress=True)
 ################################################################
 
 
