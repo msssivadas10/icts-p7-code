@@ -3,7 +3,7 @@
 # @author: AnirbanC
 
 import numpy as np
-from tqdm import tqdm
+from tqdm.auto import tqdm
 from kdtreecode import get_xxyyzz_simple
 from scipy.stats import binned_statistic
 

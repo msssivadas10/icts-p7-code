@@ -3,7 +3,7 @@
 
 import numpy as np
 from astropy.io import fits as pyfits
-from tqdm import tqdm
+from tqdm.auto import tqdm
 import pandas
 
 '''

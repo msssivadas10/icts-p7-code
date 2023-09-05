@@ -10,7 +10,6 @@ import time
 
 import h5py  # to read hdf5 files
 
-# from os import read
 import numpy as np
 import pandas as pd
 import yaml  # to parse yaml config files
@@ -176,8 +175,11 @@ def run_pipeline(config_fname):
         start = i * chunk_size
         stop = start + chunk_size
         sys.stderr.write(f"Loading sources from {start} to {stop}...\n")
-        src_i = pd.DataFrame(reading_data_sources(
-            srcs_file, srcz_file, start, stop))
+        src_i = pd.DataFrame(
+            reading_data_sources(
+                srcs_file, srcz_file, start, stop
+            )
+        )
         src_i = src_i.T.dropna().T  # dropping the nan
         src_i["cdist_mean"] = comoving_distance(
             src_i["zmean_sof"]

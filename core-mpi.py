@@ -19,12 +19,14 @@ from scipy.interpolate import CubicSpline  # for interpolations
 
 # for calculating delta-sigma
 from src.calc_tngt_shear import calculate_dsigma_increments, get_lens_constants
+
 # from sklearn.neighbors import BallTree
 from src.kdtreecode import BallTree  # for nearest neighbours
+
 # for loading the catalogs
 from src.reading_data_shape_redshift_catalog import (
     reading_data_sources,
-    reading_lens_params
+    reading_lens_params,
 )
 
 # define the function to run pipline.
